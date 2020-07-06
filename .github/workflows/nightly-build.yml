@@ -25,13 +25,12 @@ jobs:
       run: echo $TIME $F_TIME
     - name: Create a Release
       uses: ncipollo/release-action@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
       with:
         tag: ${{ steps.current-time.outputs.formattedTime }}
         name: ${{ steps.current-time.outputs.formattedTime }} nightly build
         allowUpdates: true
         draft: false
+        token: ${{ secrets.GITHUB_TOKEN }}  
   
   build:
     runs-on: ${{ matrix.os }}
@@ -95,5 +94,7 @@ jobs:
     - name: Build and zip applications
       shell: bash
       run: |
+        cd ../modflow6
         nosetests -v -w ./autotest build_nightly.py
+        cd ../modflow6-nightly-build
 
