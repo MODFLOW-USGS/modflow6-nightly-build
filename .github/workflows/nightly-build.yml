@@ -26,12 +26,12 @@ jobs:
     - name: Create a Release
       uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
       with:
-        tag_name: $TIME
-        release_name: Release $TIME
+        tag_name: ${{ F_TIME }}
+        release_name: Release ${{ F_TIME }}
         draft: true
-        prerelease: true    
+  
   build:
     runs-on: ${{ matrix.os }}
     strategy:
