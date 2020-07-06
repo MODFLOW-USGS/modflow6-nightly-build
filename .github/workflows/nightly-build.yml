@@ -39,7 +39,7 @@ jobs:
         gfortran --version
     - name: Clone MODFLOW 6 repo
       run: |
-        git clone git@github.com:MODFLOW-USGS/modflow6.git ../modflow6
+        git clone https://github.com/MODFLOW-USGS/modflow6.git ../modflow6
       shell: bash
     - name: Determine MODFLOW 6 branch
       run: |
