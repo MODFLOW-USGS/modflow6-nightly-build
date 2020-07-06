@@ -28,9 +28,9 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
       with:
-        tag_name: "${{ steps.current-time.outputs.formattedTime }}"
-        release_name: Release "${{ steps.current-time.outputs.formattedTime }}"
-        draft: true
+        tag_name: ${{ steps.current-time.outputs.formattedTime }}
+        release_name: ${{ steps.current-time.outputs.formattedTime }} nightly build
+        draft: false
   
   build:
     runs-on: ${{ matrix.os }}
