@@ -28,8 +28,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
       with:
-        tag_name: ${{ F_TIME }}
-        release_name: Release ${{ F_TIME }}
+        tag_name: "$F_TIME"
+        release_name: Release "$F_TIME"
         draft: true
   
   build:
