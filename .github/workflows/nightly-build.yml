@@ -24,12 +24,13 @@ jobs:
         F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
       run: echo $TIME $F_TIME
     - name: Create a Release
-      uses: actions/create-release@v1
+      uses: ncipollo/release-action@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
       with:
-        tag_name: ${{ steps.current-time.outputs.formattedTime }}
-        release_name: ${{ steps.current-time.outputs.formattedTime }} nightly build
+        tag: ${{ steps.current-time.outputs.formattedTime }}
+        name: ${{ steps.current-time.outputs.formattedTime }} nightly build
+        allowUpdates: true
         draft: false
   
   build:
@@ -91,4 +92,8 @@ jobs:
         print("")
         print("pymake is installed in: {}".format(pymakepth))
       shell: python
+    - name: Build and zip applications
+      shell: bash
+      run: |
+        nosetests -v -w ./autotest build_nightly.py
 
