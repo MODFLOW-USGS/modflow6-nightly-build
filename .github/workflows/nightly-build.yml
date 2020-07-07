@@ -121,13 +121,23 @@ jobs:
         file: ../modflow6/autotest/temp/${{ matrix.artifact_name }}
         tag: ${{ steps.current-time.outputs.formattedTime }}
         overwrite: true
-    
+
+    # Build LaTeX document
+    - name: Get listing of the latex files in the docs directory
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: |
+        pwd
+        ls ../modflow6/
+        ls ../modflow6/doc/
+        ls ../modflow6/doc/mf6io/*.tex
+
     - name: Build mf6io latex document
       if: matrix.os == 'ubuntu-latest'
       uses: xu-cheng/latex-action@v2
       with:
         root_file: mf6io.nightlybuild.tex
-        working_directory: ../modflow6/doc/mf6io  
+        working_directory: ../modflow6/doc/mf6io/  
 
     - name: Deploy latex document
       if: matrix.os == 'ubuntu-latest'
