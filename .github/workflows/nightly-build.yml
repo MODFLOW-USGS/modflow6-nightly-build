@@ -45,23 +45,6 @@ jobs:
         allowUpdates: true
         draft: false
         token: ${{ secrets.GITHUB_TOKEN }}  
-    
-    - name: Build mf6io latex document
-      if: matrix.os == 'ubuntu-latest'
-      uses: xu-cheng/latex-action@v2
-      with:
-        root_file: mf6io.nightlybuild.tex
-        working_directory: ../modflow6/doc/mf6io  
-
-    - name: Deploy latex document
-      if: matrix.os == 'ubuntu-latest'
-      uses: svenstaro/upload-release-action@2.0.0
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ../modflow6/doc/mf6io/mf6io.nightlybuild.pdf
-        asset_name: mf6io.pdf
-        tag: ${{ steps.current-time.outputs.formattedTime }}
-        overwrite: true
           
     - uses: actions/checkout@v2
     - name: setup-conda
@@ -138,5 +121,21 @@ jobs:
         file: ../modflow6/autotest/temp/${{ matrix.artifact_name }}
         tag: ${{ steps.current-time.outputs.formattedTime }}
         overwrite: true
+    
+    - name: Build mf6io latex document
+      if: matrix.os == 'ubuntu-latest'
+      uses: xu-cheng/latex-action@v2
+      with:
+        root_file: mf6io.nightlybuild.tex
+        working_directory: ../modflow6/doc/mf6io  
 
+    - name: Deploy latex document
+      if: matrix.os == 'ubuntu-latest'
+      uses: svenstaro/upload-release-action@2.0.0
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ../modflow6/doc/mf6io/mf6io.nightlybuild.pdf
+        asset_name: mf6io.pdf
+        tag: ${{ steps.current-time.outputs.formattedTime }}
+        overwrite: true
         
