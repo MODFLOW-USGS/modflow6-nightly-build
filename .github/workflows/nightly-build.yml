@@ -129,7 +129,7 @@ jobs:
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: ../modflow6/autotest/temp/${{ matrix.artifact_name }}
-        tag: ${{ LATEST }}
+        tag: $LATEST
         overwrite: true
 
         
