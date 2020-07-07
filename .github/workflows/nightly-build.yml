@@ -124,26 +124,29 @@ jobs:
         overwrite: true
 
     # Build LaTeX document
-    - name: Get listing of the latex files in the docs directory
+    - name: Copy the modflow6/docs/mf6io directory
       if: matrix.os == 'ubuntu-latest'
-      shell: bash
+      shell: python
       run: |
-        pwd
-        ls /home/runner/work/modflow6-nightly-build/modflow6/doc/mf6io/*.tex
+        import shutil
+        src = /home/runner/work/modflow6-nightly-build/modflow6/doc/mf6io/
+        dst = mf6io/
+        shutil.copytree(src, dst)  
+        ls dst
 
     - name: Build mf6io latex document
       if: matrix.os == 'ubuntu-latest'
       uses: xu-cheng/latex-action@v2
       with:
         root_file: mf6io.nightlybuild.tex
-        working_directory: /home/runner/work/modflow6-nightly-build/modflow6/doc/mf6io
+        working_directory: /github/workspace/mf6io
 
     - name: Deploy latex document
       if: matrix.os == 'ubuntu-latest'
       uses: svenstaro/upload-release-action@2.0.0
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ../modflow6/doc/mf6io/mf6io.nightlybuild.pdf
+        file: /mf6io/mf6io.nightlybuild.pdf
         asset_name: mf6io.pdf
         tag: ${{ steps.current-time.outputs.formattedTime }}
         overwrite: true
