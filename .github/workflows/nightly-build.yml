@@ -132,7 +132,6 @@ jobs:
         src = /home/runner/work/modflow6-nightly-build/modflow6/doc/mf6io/
         dst = mf6io/
         shutil.copytree(src, dst)  
-        ls dst
 
     - name: Build mf6io latex document
       if: matrix.os == 'ubuntu-latest'
