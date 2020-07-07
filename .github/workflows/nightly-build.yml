@@ -37,7 +37,7 @@ jobs:
       run: echo $TIME $F_TIME
 
     - name: Create a Release
-      if: matrix.os == 'windows-latest'
+      if: matrix.os == 'ubuntu-latest'
       uses: ncipollo/release-action@v1
       with:
         tag: ${{ steps.current-time.outputs.formattedTime }}
@@ -45,30 +45,46 @@ jobs:
         allowUpdates: true
         draft: false
         token: ${{ secrets.GITHUB_TOKEN }}  
+    
+    - name: Build mf6io latex document
+      if: matrix.os == 'ubuntu-latest'
+      uses: xu-cheng/latex-action@v2
+      with:
+        root_file: mf6io.nightlybuild.tex
+        working_directory: ../modflow6/doc/mf6io  
 
+    - name: Deploy latex document
+      if: matrix.os == 'ubuntu-latest'
+      uses: svenstaro/upload-release-action@2.0.0
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ../modflow6/doc/mf6io/mf6io.nightlybuild.pdf
+        asset_name: mf6io.pdf
+        tag: ${{ steps.current-time.outputs.formattedTime }}
+        overwrite: true
+          
     - uses: actions/checkout@v2
     - name: setup-conda
       uses: s-weigand/setup-conda@v1.0.3
       with:
         auto-update-conda: true
         miniconda-version: "latest"
-    - name: Install and print system dependencies (Linux)
+
+    - name: Setup symbolic link to gfortran on Linux
       if: runner.os == 'Linux'
       run: |
         sudo ln -fs /usr/bin/gfortran-9 /usr/local/bin/gfortran
-        gfortran --version
-    - name: Install and print system dependencies (macOS)
-      if: runner.os == 'macOS'
+
+    - name: Print gfortran version
+      shell: bash
       run: |
-        gfortran --version
-    - name: Install and print system dependencies (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        gfortran --version
+        gfortran --version       
+        
     - name: Clone MODFLOW 6 repo
       run: |
         git clone https://github.com/MODFLOW-USGS/modflow6.git ../modflow6
       shell: bash
+      
     - name: Determine MODFLOW 6 branch
       run: |
         pwd
@@ -76,6 +92,7 @@ jobs:
         git branch
         cd ../modflow6-nightly-build
         ls ../
+    
     - name: Install python packages
       run: |
         conda info
@@ -83,6 +100,7 @@ jobs:
         # use pip to install numpy and matplotlib because of a windows issue
         pip install numpy
         pip install https://github.com/modflowpy/pymake/zipball/master
+        
     - name: Print python package versions
       run: |
         import sys
@@ -113,7 +131,7 @@ jobs:
         cd ../../../modflow6-nightly-build
         
     # Deploy releases
-    - name: Upload files to a GitHub release
+    - name: Upload compiled executbles to the latest GitHub release
       uses: svenstaro/upload-release-action@2.0.0
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
