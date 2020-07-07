@@ -129,8 +129,8 @@ jobs:
       shell: python
       run: |
         import shutil
-        src = /home/runner/work/modflow6-nightly-build/modflow6/doc/mf6io/
-        dst = mf6io/
+        src = "/home/runner/work/modflow6-nightly-build/modflow6/doc/mf6io/"
+        dst = "./mf6io/"
         shutil.copytree(src, dst)  
 
     - name: Build mf6io latex document
