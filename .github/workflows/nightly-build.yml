@@ -37,7 +37,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: linux.zip
+          - os: windows-latest
+            artifact_name: win64.zip
+          - os: macos-latest
+            artifact_name: mac.zip
 
     steps:
     - uses: actions/checkout@v2
@@ -97,4 +103,33 @@ jobs:
         cd ../modflow6
         nosetests -v -w ./autotest build_nightly.py
         cd ../modflow6-nightly-build
+        
+    - name: Rename windows release
+      if: matrix.os == 'windows-latest'
+      shell: bash  
+      run: |
+        cd ../modflow6/autotest/temp/
+        mv -f win32.zip win64.zip
+        cd ../../../modflow6-nightly-build
+        
+    - name: Get latest release
+      id: latest_version
+      uses: abatilo/release-info-action@v1.1.0
+    - name: Set environmental variable with the latest release info
+      env:
+        LATEST: ${{ steps.latest_version.outputs.latest_tag }}
+        LATEST_DATE: ${{ steps.latest_version.outputs.latest_tag_published_at }}
+      shell: bash  
+      run: |
+        echo "Version $LATEST was released at $LATEST_DATE"
+        
+    # Deploy releases
+    - name: Upload files to a GitHub release
+      uses: svenstaro/upload-release-action@2.0.0
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ../modflow6/autotest/temp/${{ matrix.artifact_name }}
+        tag: ${{ LATEST }}
+        overwrite: true
 
+        
