@@ -11,28 +11,6 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Get Current Time
-      uses: 1466587594/get-current-time@v1.0.0
-      id: current-time
-      with:
-        format: YYYYMMDD
-    - name: Use current time
-      env:
-        TIME: "${{ steps.current-time.outputs.time }}"
-        F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
-      run: echo $TIME $F_TIME
-    - name: Create a Release
-      uses: ncipollo/release-action@v1
-      with:
-        tag: ${{ steps.current-time.outputs.formattedTime }}
-        name: ${{ steps.current-time.outputs.formattedTime }} nightly build
-        allowUpdates: true
-        draft: false
-        token: ${{ secrets.GITHUB_TOKEN }}  
-  
-  build:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -40,12 +18,34 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: linux.zip
-          - os: windows-latest
-            artifact_name: win64.zip
           - os: macos-latest
             artifact_name: mac.zip
+          - os: windows-latest
+            artifact_name: win64.zip
 
     steps:
+    - name: Get Current Time
+      uses: 1466587594/get-current-time@v1.0.0
+      id: current-time
+      with:
+        format: YYYYMMDD
+    
+    - name: Use current time
+      env:
+        TIME: "${{ steps.current-time.outputs.time }}"
+        F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
+      run: echo $TIME $F_TIME
+
+    - name: Create a Release
+      if: matrix.os == 'windows-latest'
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ steps.current-time.outputs.formattedTime }}
+        name: ${{ steps.current-time.outputs.formattedTime }} nightly build
+        allowUpdates: true
+        draft: false
+        token: ${{ secrets.GITHUB_TOKEN }}  
+
     - uses: actions/checkout@v2
     - name: setup-conda
       uses: s-weigand/setup-conda@v1.0.3
@@ -112,24 +112,13 @@ jobs:
         mv -f win32.zip win64.zip
         cd ../../../modflow6-nightly-build
         
-    - name: Get latest release
-      id: latest_version
-      uses: abatilo/release-info-action@v1.1.0
-    - name: Set environmental variable with the latest release info
-      env:
-        LATEST: ${{ steps.latest_version.outputs.latest_tag }}
-        LATEST_DATE: ${{ steps.latest_version.outputs.latest_tag_published_at }}
-      shell: bash  
-      run: |
-        echo "Version $LATEST was released at $LATEST_DATE"
-        
     # Deploy releases
     - name: Upload files to a GitHub release
       uses: svenstaro/upload-release-action@2.0.0
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: ../modflow6/autotest/temp/${{ matrix.artifact_name }}
-        tag: $LATEST
+        tag: ${{ steps.current-time.outputs.formattedTime }}
         overwrite: true
 
         
