@@ -129,23 +129,14 @@ jobs:
       shell: bash
       run: |
         pwd
-        ls ../modflow6/doc/mf6io/*.tex
-        cd ../modflow6/doc/mf6io/
-        pwd
+        ls /home/runner/work/modflow6-nightly-build/modflow6/doc/mf6io/*.tex
 
     - name: Build mf6io latex document
       if: matrix.os == 'ubuntu-latest'
       uses: xu-cheng/latex-action@v2
       with:
         root_file: mf6io.nightlybuild.tex
-
-    - name: Get back to the original location
-      if: matrix.os == 'ubuntu-latest'
-      shell: bash
-      run: |
-        pwd
-        cd ../../../modflow6-nightly-build
-        pwd
+        working_directory: /home/runner/work/modflow6-nightly-build/modflow6/doc/mf6io
 
     - name: Deploy latex document
       if: matrix.os == 'ubuntu-latest'
