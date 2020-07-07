@@ -98,6 +98,7 @@ jobs:
         print("")
         print("pymake is installed in: {}".format(pymakepth))
       shell: python
+      
     - name: Build and zip applications
       shell: bash
       run: |
@@ -114,7 +115,7 @@ jobs:
         cd ../../../modflow6-nightly-build
         
     # Deploy releases
-    - name: Upload compiled executbles to the latest GitHub release
+    - name: Upload compiled executables to the latest GitHub release
       uses: svenstaro/upload-release-action@2.0.0
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -128,16 +129,23 @@ jobs:
       shell: bash
       run: |
         pwd
-        ls ../modflow6/
-        ls ../modflow6/doc/
         ls ../modflow6/doc/mf6io/*.tex
+        cd ../modflow6/doc/mf6io/
+        pwd
 
     - name: Build mf6io latex document
       if: matrix.os == 'ubuntu-latest'
       uses: xu-cheng/latex-action@v2
       with:
         root_file: mf6io.nightlybuild.tex
-        working_directory: ../modflow6/doc/mf6io/  
+
+    - name: Get back to the original location
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: |
+        pwd
+        cd ../../../modflow6-nightly-build
+        pwd
 
     - name: Deploy latex document
       if: matrix.os == 'ubuntu-latest'
