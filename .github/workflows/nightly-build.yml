@@ -129,8 +129,8 @@ jobs:
       shell: python
       run: |
         import shutil
-        src = "/home/runner/work/modflow6-nightly-build/modflow6/doc/mf6io/"
-        dst = "./mf6io/"
+        src = "/home/runner/work/modflow6-nightly-build/modflow6/doc/"
+        dst = "./doc/"
         shutil.copytree(src, dst)  
 
     - name: Build mf6io latex document
@@ -138,14 +138,14 @@ jobs:
       uses: xu-cheng/latex-action@v2
       with:
         root_file: mf6io.nightlybuild.tex
-        working_directory: /github/workspace/mf6io
+        working_directory: /github/workspace/doc/mf6io/
 
     - name: Deploy latex document
       if: matrix.os == 'ubuntu-latest'
       uses: svenstaro/upload-release-action@2.0.0
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: /mf6io/mf6io.nightlybuild.pdf
+        file: ./doc/mf6io/mf6io.nightlybuild.pdf
         asset_name: mf6io.pdf
         tag: ${{ steps.current-time.outputs.formattedTime }}
         overwrite: true
