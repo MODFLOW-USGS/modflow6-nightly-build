@@ -3,8 +3,8 @@ name: MODFLOW 6 nightly build
 on:
   schedule:
     # - cron: '0 2 * * *' # run at 2 AM UTC
-    - cron: '*/10 * * * *' # run every 10 minutes
-    # - cron: '20 */1 * * *' # run every hour at 20 minutes past the hour
+    # - cron: '*/10 * * * *' # run every 10 minutes
+    - cron: '20 */1 * * *' # run every hour at 20 minutes past the hour
   push:
     branches:
       - master
@@ -106,14 +106,6 @@ jobs:
         nosetests -v -w ./autotest build_nightly.py
         cd ../modflow6-nightly-build
         
-    - name: Rename windows release
-      if: matrix.os == 'windows-latest'
-      shell: bash  
-      run: |
-        cd ../modflow6/autotest/temp/
-        mv -f win32.zip win64.zip
-        cd ../../../modflow6-nightly-build
-        
     # Deploy releases
     - name: Upload compiled executables to the latest GitHub release
       uses: svenstaro/upload-release-action@2.0.0
@@ -124,7 +116,7 @@ jobs:
         overwrite: true
 
     # Build LaTeX document
-    - name: Copy the modflow6/docs/mf6io directory
+    - name: Copy the modflow6/docs directory
       if: matrix.os == 'ubuntu-latest'
       shell: python
       run: |
