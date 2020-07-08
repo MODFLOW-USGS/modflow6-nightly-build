@@ -36,6 +36,15 @@ jobs:
         F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
       run: echo $TIME $F_TIME
 
+    - name: Delete Older Releases
+      if: matrix.os == 'ubuntu-latest'
+      uses: dev-drprasad/delete-older-releases@v0.1.0
+      with:
+        keep_latest: 30
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Create a Release
       if: matrix.os == 'ubuntu-latest'
       uses: ncipollo/release-action@v1
@@ -72,8 +81,10 @@ jobs:
       run: |
         pwd
         cd ./modflow6/
+        pwd
         git branch
         cd ../
+        pwd
         ls ./
     
     - name: Install python packages
