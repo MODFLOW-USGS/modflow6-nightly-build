@@ -65,57 +65,71 @@ jobs:
         
     - name: Clone MODFLOW 6 repo
       run: |
-        git clone https://github.com/MODFLOW-USGS/modflow6.git ../modflow6
+        git clone https://github.com/MODFLOW-USGS/modflow6.git modflow6
       shell: bash
       
     - name: Determine MODFLOW 6 branch
       run: |
         pwd
-        cd ../modflow6
+        cd ./modflow6/
         git branch
-        cd ../modflow6-nightly-build
-        ls ../
+        cd ../
+        ls ./
     
     - name: Install python packages
       run: |
         conda info
         conda install pip requests appdirs nose
         # use pip to install numpy and matplotlib because of a windows issue
-        pip install numpy
+        pip install numpy matplotlib
+        pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install https://github.com/modflowpy/pymake/zipball/master
         
     - name: Print python package versions
+      shell: python
       run: |
         import sys
         import nose
         import numpy as np
+        import matplotlib as mpl
+        import flopy
         import pymake
+        flopypth = flopy.__path__[0]
         pymakepth = pymake.__path__[0]
         print("python version:     {}".format(sys.version))
         print("nosetest version:   {}".format(nose.__version__))
         print("numpy version:      {}".format(np.__version__))
+        print("matplotlib version: {}".format(mpl.__version__))
+        print("flopy version:      {}".format(flopy.__version__))
         print("pymake version:     {}".format(pymake.__version__))
         print("")
+        print("flopy is installed in:  {}".format(flopypth))
         print("pymake is installed in: {}".format(pymakepth))
-      shell: python
       
     - name: Build and zip applications
       shell: bash
       run: |
-        cd ../modflow6
-        nosetests -v -w ./autotest build_nightly.py
-        cd ../modflow6-nightly-build
+        cd ./modflow6/
+        nosetests -v -w ./distribution build_nightly.py
+        cd ../
         
     # Deploy releases
     - name: Upload compiled executables to the latest GitHub release
       uses: svenstaro/upload-release-action@2.0.0
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ../modflow6/autotest/temp/${{ matrix.artifact_name }}
+        file: ./modflow6/distribution/temp/${{ matrix.artifact_name }}
         tag: ${{ steps.current-time.outputs.formattedTime }}
         overwrite: true
 
     # Build LaTeX document
+    - name: Update flopy MODFLOW 6 classes
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        cd ./modflow6/autotest
+        python update_flopy.py
+        cd ../../
+      
     - name: Copy the modflow6/docs directory
       if: matrix.os == 'ubuntu-latest'
       shell: python
@@ -130,14 +144,14 @@ jobs:
       uses: xu-cheng/latex-action@v2
       with:
         root_file: mf6io.nightlybuild.tex
-        working_directory: /github/workspace/doc/mf6io/
+        working_directory: /github/workspace/modflow6/doc/mf6io/
 
     - name: Deploy latex document
       if: matrix.os == 'ubuntu-latest'
       uses: svenstaro/upload-release-action@2.0.0
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./doc/mf6io/mf6io.nightlybuild.pdf
+        file: ./modflow6/doc/mf6io/mf6io.nightlybuild.pdf
         asset_name: mf6io.pdf
         tag: ${{ steps.current-time.outputs.formattedTime }}
         overwrite: true
