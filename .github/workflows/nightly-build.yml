@@ -95,7 +95,14 @@ jobs:
         pip install numpy matplotlib
         pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install https://github.com/modflowpy/pymake/zipball/master
-        
+
+    - name: Update flopy MODFLOW 6 classes
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        cd ./modflow6/autotest
+        python update_flopy.py
+        cd ../../
+      
     - name: Print python package versions
       shell: python
       run: |
@@ -134,19 +141,12 @@ jobs:
         overwrite: true
 
     # Build LaTeX document
-    - name: Update flopy MODFLOW 6 classes
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        cd ./modflow6/autotest
-        python update_flopy.py
-        cd ../../
-      
     - name: Copy the modflow6/docs directory
       if: matrix.os == 'ubuntu-latest'
       shell: python
       run: |
         import shutil
-        src = "/home/runner/work/modflow6-nightly-build/modflow6/doc/"
+        src = "/home/runner/work/modflow6-nightly-build/modflow6-nightly-build/modflow6/doc/"
         dst = "./doc/"
         shutil.copytree(src, dst)  
 
