@@ -74,15 +74,15 @@ jobs:
               'information on the MinGW version of gfortran used on Windows can ' + \
               'be found at https://github.com/actions/virtual-environments/blob/' + \
               'master/images/win/Windows2019-Readme.md.\n\n'
-        msg += 'On linux and OSX, the gfortran compiler used to compile the ' + \
+        msg += 'On linux and MacOS, the gfortran compiler used to compile the ' + \
                'MODFLOW 6 executables and shared object (libmf6.so) will need ' + \
                'to be installed locally. The MODFLOW 6 executables and shared ' + \
                'object were compiled on linux using gfortran ' + \
                'version {}. '.format(version)
         msg += 'The same major version of gfortran (gfortran-{}) '.format(major) + \
                'was used to compile the MODFLOW 6 executables and shared object ' + \
-               'on OSX. Additional information on the version of gfortran ' + \
-               'used on OSX can be found at https://github.com/actions/' + \
+               'on MacOS. Additional information on the version of gfortran ' + \
+               'used on MacOS can be found at https://github.com/actions/' + \
                'virtual-environments/blob/master/images/macos/macos-10.15-Readme.md.'
 
         f = open('bodyFile', 'w')
