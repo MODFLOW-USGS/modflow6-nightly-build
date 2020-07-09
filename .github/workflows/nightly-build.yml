@@ -68,18 +68,23 @@ jobs:
         major = version.split('.')[0]
 
         msg = 'Windows executables are statically linked and can be run ' + \
-              'without gfortran being installed. gfortran will need to be ' + \
-              'installed in order to use the MODFLOW 6 dll (libmf6.dll) on ' + \
-              'Windows. On linux and OSX, the gfortran compiler used to ' + \
-              'compile the MODFLOW 6 executables and shared object (libmf6.so) ' + \
-              'will need to be installed. '
-        msg += 'The MODFLOW 6 executables and shared object were compiled on ' + \
-               'linux using gfortran version {}. '.format(version)
+              'without gfortran being installed. In order to use the MODFLOW 6 ' + \
+              'dynamic-link library (libmf6.dll) on on Windows gfortran will need ' + \
+              'to be installed. The MinGW version of gfortran was used to compile ' + \
+              'the MODFLOW 6 executables and dynamic-link library on Windows. More ' + \
+              'information on the version of gfortran used on Windows can be found ' + \
+              'at https://github.com/actions/virtual-environments/blob/master/' + \
+              'images/win/Windows2019-Readme.md.\n\n'
+        msg += 'On linux and OSX, the gfortran compiler used to compile the ' + \
+               'MODFLOW 6 executables and shared object (libmf6.so) will need ' + \
+               'to be installed locally. The MODFLOW 6 executables and shared ' + \
+               'object were compiled on linux using gfortran ' + \
+               'version {}. '.format(version)
         msg += 'The same major version of gfortran (gfortran-{}) '.format(major) + \
                'was used to compile the MODFLOW 6 executables and shared object ' + \
                'on OSX. Additional information on the version of gfortran ' + \
                'used on OSX can be found at https://github.com/actions/' + \
-               'virtual-environments/blob/master/images/macos/macos-10.15-Readme.md'
+               'virtual-environments/blob/master/images/macos/macos-10.15-Readme.md.'
 
         f = open('bodyFile', 'w')
         f.write(msg)
