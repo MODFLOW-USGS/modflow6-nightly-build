@@ -24,6 +24,22 @@ jobs:
             artifact_name: win64.zip
 
     steps:
+    - uses: actions/checkout@v2
+    - name: setup-conda
+      uses: s-weigand/setup-conda@v1.0.3
+      with:
+        auto-update-conda: true
+        miniconda-version: "latest"
+    
+    - name: Install python packages
+      run: |
+        conda info
+        conda install pip requests appdirs nose
+        # use pip to install numpy and matplotlib because of a windows issue
+        pip install numpy matplotlib
+        pip install https://github.com/modflowpy/flopy/zipball/develop
+        pip install https://github.com/modflowpy/pymake/zipball/master
+
     - name: Setup symbolic link to gfortran on Linux
       if: runner.os == 'Linux'
       run: |
@@ -100,13 +116,6 @@ jobs:
         allowUpdates: true
         draft: false
         token: ${{ secrets.GITHUB_TOKEN }}  
-          
-    - uses: actions/checkout@v2
-    - name: setup-conda
-      uses: s-weigand/setup-conda@v1.0.3
-      with:
-        auto-update-conda: true
-        miniconda-version: "latest"
         
     - name: Clone MODFLOW 6 repo
       run: |
@@ -122,15 +131,6 @@ jobs:
         cd ../
         pwd
         ls ./
-    
-    - name: Install python packages
-      run: |
-        conda info
-        conda install pip requests appdirs nose
-        # use pip to install numpy and matplotlib because of a windows issue
-        pip install numpy matplotlib
-        pip install https://github.com/modflowpy/flopy/zipball/develop
-        pip install https://github.com/modflowpy/pymake/zipball/master
 
     - name: Update flopy MODFLOW 6 classes
       if: matrix.os == 'ubuntu-latest'
