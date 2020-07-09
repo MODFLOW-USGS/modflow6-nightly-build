@@ -56,7 +56,7 @@ jobs:
       run: |
         import subprocess
 
-        argv = ['gfortran', '-dumpversion']
+        argv = ['gfortran', '--version']
         with subprocess.Popen(argv,
                               stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT,
@@ -64,7 +64,7 @@ jobs:
             output, unused_err = process.communicate(timeout=10)
             buff = output.decode('utf-8')
 
-        version = buff.rstrip()
+        version = buff.splitlines()[0].split()[-1]
         major = version.split('.')[0]
 
         msg = 'Windows executables are statically linked and can be run ' + \
