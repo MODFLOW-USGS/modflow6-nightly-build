@@ -24,6 +24,51 @@ jobs:
             artifact_name: win64.zip
 
     steps:
+    - name: Setup symbolic link to gfortran on Linux
+      if: runner.os == 'Linux'
+      run: |
+        sudo ln -fs /usr/bin/gfortran-9 /usr/local/bin/gfortran
+
+    - name: Print gfortran version
+      shell: bash
+      run: |
+        gfortran --version
+        
+    - name: Build bodyFile with gfortran information
+      if: runner.os == 'Linux'
+      shell: python
+      run: |
+        import subprocess
+
+        argv = ['gfortran', '-dumpversion']
+        with subprocess.Popen(argv,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT,
+                              cwd='.') as process:
+            output, unused_err = process.communicate(timeout=10)
+            buff = output.decode('utf-8')
+
+        version = buff.rstrip()
+        major = version.split('.')[0]
+
+        msg = 'Windows executables are statically linked and can be run ' + \
+              'without gfortran being installed. gfortran will need to be ' + \
+              'installed in order to use the MODFLOW 6 dll (libmf6.dll) on ' + \
+              'Windows. On linux and OSX, the gfortran compiler used to ' + \
+              'compile the MODFLOW 6 executables and shared object (libmf6.so) ' + \
+              'will need to be installed. '
+        msg += 'The MODFLOW 6 executables and shared object were compiled on ' + \
+               'linux using gfortran version {}. '.format(version)
+        msg += 'The same major version of gfortran (gfortran-{}) '.format(major) + \
+               'was used to compile the MODFLOW 6 executables and shared object ' + \
+               'on OSX. Additional information on the version of gfortran ' + \
+               'used on OSX can be found at https://github.com/actions/' + \
+               'virtual-environments/blob/master/images/macos/macos-10.15-Readme.md'
+
+        f = open('bodyFile', 'w')
+        f.write(msg)
+        f.close()        
+
     - name: Get Current Time
       uses: 1466587594/get-current-time@v1.0.0
       id: current-time
@@ -51,6 +96,7 @@ jobs:
       with:
         tag: ${{ steps.current-time.outputs.formattedTime }}
         name: ${{ steps.current-time.outputs.formattedTime }} nightly build
+        bodyFile: bodyFile 
         allowUpdates: true
         draft: false
         token: ${{ secrets.GITHUB_TOKEN }}  
@@ -61,16 +107,6 @@ jobs:
       with:
         auto-update-conda: true
         miniconda-version: "latest"
-
-    - name: Setup symbolic link to gfortran on Linux
-      if: runner.os == 'Linux'
-      run: |
-        sudo ln -fs /usr/bin/gfortran-9 /usr/local/bin/gfortran
-
-    - name: Print gfortran version
-      shell: bash
-      run: |
-        gfortran --version       
         
     - name: Clone MODFLOW 6 repo
       run: |
