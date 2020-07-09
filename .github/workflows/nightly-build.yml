@@ -69,7 +69,7 @@ jobs:
 
         msg = 'Windows executables are statically linked and can be run ' + \
               'without gfortran being installed. In order to use the MODFLOW 6 ' + \
-              'dynamic-link library (libmf6.dll) on on Windows, the MinGW  ' + \
+              'dynamic-link library (libmf6.dll) on Windows, the MinGW  ' + \
               'version of gfortran will need to be installed locally. More ' + \
               'information on the MinGW version of gfortran used on Windows can ' + \
               'be found at https://github.com/actions/virtual-environments/blob/' + \
