@@ -2,9 +2,9 @@ name: MODFLOW 6 nightly build
 
 on:
   schedule:
-    # - cron: '0 2 * * *' # run at 2 AM UTC
+    - cron: '0 2 * * *' # run at 2 AM UTC
     # - cron: '*/10 * * * *' # run every 10 minutes
-    - cron: '20 */1 * * *' # run every hour at 20 minutes past the hour
+    # - cron: '20 */1 * * *' # run every hour at 20 minutes past the hour
   push:
     branches:
       - master
@@ -69,12 +69,11 @@ jobs:
 
         msg = 'Windows executables are statically linked and can be run ' + \
               'without gfortran being installed. In order to use the MODFLOW 6 ' + \
-              'dynamic-link library (libmf6.dll) on on Windows gfortran will need ' + \
-              'to be installed. The MinGW version of gfortran was used to compile ' + \
-              'the MODFLOW 6 executables and dynamic-link library on Windows. More ' + \
-              'information on the version of gfortran used on Windows can be found ' + \
-              'at https://github.com/actions/virtual-environments/blob/master/' + \
-              'images/win/Windows2019-Readme.md.\n\n'
+              'dynamic-link library (libmf6.dll) on on Windows, the MinGW  ' + \
+              'version of gfortran will need to be installed locally. More ' + \
+              'information on the MinGW version of gfortran used on Windows can ' + \
+              'be found at https://github.com/actions/virtual-environments/blob/' + \
+              'master/images/win/Windows2019-Readme.md.\n\n'
         msg += 'On linux and OSX, the gfortran compiler used to compile the ' + \
                'MODFLOW 6 executables and shared object (libmf6.so) will need ' + \
                'to be installed locally. The MODFLOW 6 executables and shared ' + \
