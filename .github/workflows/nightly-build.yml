@@ -19,10 +19,13 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: linux.zip
+            body_name: bodyFileLinux  
           - os: macos-latest
             artifact_name: mac.zip
+            body_name: bodyFileMac
           - os: windows-latest
             artifact_name: win64.zip
+            body_name: bodyFileWindows
 
     steps:
     - uses: actions/checkout@v2
@@ -123,40 +126,47 @@ jobs:
       if: runner.os == 'Linux'
       shell: python
       run: |
+        import sys
         import subprocess
 
-        argv = ['gfortran', '--version']
+        argv = ["gfortran", "--version"]
         with subprocess.Popen(argv,
                               stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT,
-                              cwd='.') as process:
+                              cwd=".") as process:
             output, unused_err = process.communicate(timeout=10)
-            buff = output.decode('utf-8')
+            buff = output.decode("utf-8")
 
         version = buff.splitlines()[0].split()[-1]
-        major = version.split('.')[0]
+        major = version.split(".")[0]
 
-        msg = 'Windows executables are statically linked and can be run ' + \
-              'without gfortran being installed. In order to use the MODFLOW 6 ' + \
-              'dynamic-link library (libmf6.dll) on Windows, the MinGW  ' + \
-              'version of gfortran will need to be installed locally. More ' + \
-              'information on the MinGW version of gfortran used on Windows can ' + \
-              'be found at https://github.com/actions/virtual-environments/blob/' + \
-              'master/images/win/Windows2019-Readme.md.\n\n'
-        msg += 'On linux and MacOS, the gfortran compiler used to compile the ' + \
-               'MODFLOW 6 executables and shared object (libmf6.so) will need ' + \
-               'to be installed locally. The MODFLOW 6 executables and shared ' + \
-               'object were compiled on linux using gfortran ' + \
-               'version {}. '.format(version)
-        msg += 'The same major version of gfortran (gfortran-{}) '.format(major) + \
-               'was used to compile the MODFLOW 6 executables and shared object ' + \
-               'on MacOS. Additional information on the version of gfortran ' + \
-               'used on MacOS can be found at https://github.com/actions/' + \
-               'virtual-environments/blob/master/images/macos/macos-10.15-Readme.md.'
+        osname = sys.platform.lower()
 
-        f = open('bodyFile', 'w')
+        if osname == "win32":
+            fpth = "bodyFileWindows"
+            msg = "Windows executables are statically linked and can be run " + \
+                  "without gfortran being installed. In order to use the MODFLOW 6 " + \
+                  "dynamic-link library (libmf6.dll) on Windows, the MinGW  " + \
+                  "version of gfortran version ".format(version) + \
+                  "will need to be installed locally.\n\n"
+        elif osname == "darwin":
+            fpth = "bodyFileMac"
+            msg = "On MacOS, the gfortran compiler used to compile the " + \
+                  "MODFLOW 6 executables and shared object (libmf6.so) will need " + \
+                  "to be installed locally. The MODFLOW 6 executables and shared " + \
+                  "object were compiled on MacOS using Homebrew gfortran " + \
+                  "version {}.\n\n".format(version)
+        else:
+            fpth = "bodyFileLinux"
+            msg = "On Linux, the gfortran compiler used to compile the " + \
+                  "MODFLOW 6 executables and shared object (libmf6.so) will need " + \
+                  "to be installed locally. The MODFLOW 6 executables and shared " + \
+                  "object were compiled on Linux using gfortran " + \
+                  "version {}.\n\n".format(version)
+
+        f = open(fpth, "w")
         f.write(msg)
-        f.close()        
+        f.close()
 
     # Build LaTeX document
     - name: Copy the modflow6/docs directory
@@ -186,7 +196,9 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: nightly
-        path: ./modflow6/distribution/temp/${{ matrix.artifact_name }}
+        path: |
+          ./modflow6/distribution/temp/${{ matrix.artifact_name }}
+          ./${{ matrix.body_name }}
 
     - name: Upload additional Build Artifacts
       if: runner.os == 'Linux'
@@ -195,7 +207,6 @@ jobs:
         name: nightly
         path: |
           ./mf6io.pdf
-          ./bodyFile
           
   # make the release if previous job was successful
   release:
@@ -208,11 +219,22 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: nightly
+        path: ./ 
 
     - name: List files in the artifact directory
       shell: bash
       run: |
+        pwd
+        ls -l ./
         ls -l ./nightly/
+        
+    - name: concatenate 
+      shell: bash
+      run: |
+        cd ./nightly
+        cat bodyFileWindows bodyFileMac bodyFileLinux > ../bodyFile
+        cd ../
+        ls -l ./
       
     - name: Get Current Time
       uses: 1466587594/get-current-time@v1.0.0
@@ -245,7 +267,6 @@ jobs:
         draft: false
         token: ${{ secrets.GITHUB_TOKEN }}  
   
-    # Deploy releases
     - name: Upload compiled executables to the latest GitHub release
       uses: svenstaro/upload-release-action@2.0.0
       with:
@@ -253,3 +274,8 @@ jobs:
         file: ./nightly/*
         tag: ${{ steps.current-time.outputs.formattedTime }}
         overwrite: true
+
+    - name: Delete Artifact
+      uses: GeekyEggo/delete-artifact@v1.0.0
+      with:
+        name: nightly     
