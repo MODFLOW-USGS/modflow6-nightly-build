@@ -10,7 +10,8 @@ on:
       - master
 
 jobs:
-  build:
+  build_for_os:
+    name: compile on linux, macos, and windows
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -45,9 +46,9 @@ jobs:
       run: |
         sudo ln -fs /usr/bin/gfortran-9 /usr/local/bin/gfortran
         sudo ln -fs /usr/bin/gcc-9 /usr/local/bin/gcc
-        sudo ln -fs /usr/bin/gcc-9 /usr/local/bin/gfortran
+        sudo ln -fs /usr/bin/g++-9 /usr/local/bin/g++
     
-    - name: Install gfortran on MacOS, if necessart
+    - name: Install gfortran on MacOS, if necessary
       shell: bash
       if: runner.os == 'macOS'
       run: |
@@ -67,77 +68,6 @@ jobs:
         gfortran --version
         gcc --version
         g++ --version
-        
-    - name: Build bodyFile with gfortran information
-      if: runner.os == 'Linux'
-      shell: python
-      run: |
-        import subprocess
-
-        argv = ['gfortran', '--version']
-        with subprocess.Popen(argv,
-                              stdout=subprocess.PIPE,
-                              stderr=subprocess.STDOUT,
-                              cwd='.') as process:
-            output, unused_err = process.communicate(timeout=10)
-            buff = output.decode('utf-8')
-
-        version = buff.splitlines()[0].split()[-1]
-        major = version.split('.')[0]
-
-        msg = 'Windows executables are statically linked and can be run ' + \
-              'without gfortran being installed. In order to use the MODFLOW 6 ' + \
-              'dynamic-link library (libmf6.dll) on Windows, the MinGW  ' + \
-              'version of gfortran will need to be installed locally. More ' + \
-              'information on the MinGW version of gfortran used on Windows can ' + \
-              'be found at https://github.com/actions/virtual-environments/blob/' + \
-              'master/images/win/Windows2019-Readme.md.\n\n'
-        msg += 'On linux and MacOS, the gfortran compiler used to compile the ' + \
-               'MODFLOW 6 executables and shared object (libmf6.so) will need ' + \
-               'to be installed locally. The MODFLOW 6 executables and shared ' + \
-               'object were compiled on linux using gfortran ' + \
-               'version {}. '.format(version)
-        msg += 'The same major version of gfortran (gfortran-{}) '.format(major) + \
-               'was used to compile the MODFLOW 6 executables and shared object ' + \
-               'on MacOS. Additional information on the version of gfortran ' + \
-               'used on MacOS can be found at https://github.com/actions/' + \
-               'virtual-environments/blob/master/images/macos/macos-10.15-Readme.md.'
-
-        f = open('bodyFile', 'w')
-        f.write(msg)
-        f.close()        
-
-    - name: Get Current Time
-      uses: 1466587594/get-current-time@v1.0.0
-      id: current-time
-      with:
-        format: YYYYMMDD
-    
-    - name: Use current time
-      env:
-        TIME: "${{ steps.current-time.outputs.time }}"
-        F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
-      run: echo $TIME $F_TIME
-
-    - name: Delete Older Releases
-      if: matrix.os == 'ubuntu-latest'
-      uses: dev-drprasad/delete-older-releases@v0.1.0
-      with:
-        keep_latest: 30
-        delete_tags: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Create a Release
-      if: matrix.os == 'ubuntu-latest'
-      uses: ncipollo/release-action@v1
-      with:
-        tag: ${{ steps.current-time.outputs.formattedTime }}
-        name: ${{ steps.current-time.outputs.formattedTime }} nightly build
-        bodyFile: bodyFile 
-        allowUpdates: true
-        draft: false
-        token: ${{ secrets.GITHUB_TOKEN }}  
         
     - name: Clone MODFLOW 6 repo
       run: |
@@ -189,18 +119,48 @@ jobs:
         nosetests -v -w ./distribution build_nightly.py
         cd ../
         
-    # Deploy releases
-    - name: Upload compiled executables to the latest GitHub release
-      uses: svenstaro/upload-release-action@2.0.0
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./modflow6/distribution/temp/${{ matrix.artifact_name }}
-        tag: ${{ steps.current-time.outputs.formattedTime }}
-        overwrite: true
+    - name: Build bodyFile with gfortran information
+      if: runner.os == 'Linux'
+      shell: python
+      run: |
+        import subprocess
+
+        argv = ['gfortran', '--version']
+        with subprocess.Popen(argv,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT,
+                              cwd='.') as process:
+            output, unused_err = process.communicate(timeout=10)
+            buff = output.decode('utf-8')
+
+        version = buff.splitlines()[0].split()[-1]
+        major = version.split('.')[0]
+
+        msg = 'Windows executables are statically linked and can be run ' + \
+              'without gfortran being installed. In order to use the MODFLOW 6 ' + \
+              'dynamic-link library (libmf6.dll) on Windows, the MinGW  ' + \
+              'version of gfortran will need to be installed locally. More ' + \
+              'information on the MinGW version of gfortran used on Windows can ' + \
+              'be found at https://github.com/actions/virtual-environments/blob/' + \
+              'master/images/win/Windows2019-Readme.md.\n\n'
+        msg += 'On linux and MacOS, the gfortran compiler used to compile the ' + \
+               'MODFLOW 6 executables and shared object (libmf6.so) will need ' + \
+               'to be installed locally. The MODFLOW 6 executables and shared ' + \
+               'object were compiled on linux using gfortran ' + \
+               'version {}. '.format(version)
+        msg += 'The same major version of gfortran (gfortran-{}) '.format(major) + \
+               'was used to compile the MODFLOW 6 executables and shared object ' + \
+               'on MacOS. Additional information on the version of gfortran ' + \
+               'used on MacOS can be found at https://github.com/actions/' + \
+               'virtual-environments/blob/master/images/macos/macos-10.15-Readme.md.'
+
+        f = open('bodyFile', 'w')
+        f.write(msg)
+        f.close()        
 
     # Build LaTeX document
     - name: Copy the modflow6/docs directory
-      if: matrix.os == 'ubuntu-latest'
+      if: runner.os == 'Linux'
       shell: python
       run: |
         import shutil
@@ -209,19 +169,87 @@ jobs:
         shutil.copytree(src, dst)  
 
     - name: Build mf6io latex document
-      if: matrix.os == 'ubuntu-latest'
+      if: runner.os == 'Linux'
       uses: xu-cheng/latex-action@v2
       with:
         root_file: mf6io.nightlybuild.tex
         working_directory: /github/workspace/modflow6/doc/mf6io/
+    
+    - name: Rename and move the LaTeX document
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        mv ./modflow6/doc/mf6io/mf6io.nightlybuild.pdf mf6io.pdf
+        ls -l ./
+    
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: nightly
+        path: ./modflow6/distribution/temp/${{ matrix.artifact_name }}
 
-    - name: Deploy latex document
+    - name: Upload additional Build Artifacts
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v2
+      with:
+        name: nightly
+        path: |
+          ./mf6io.pdf
+          ./bodyFile
+          
+  # make the release if previous job was successful
+  release:
+    name: Make a nightly release
+    needs: build_for_os
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download a Build Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: nightly
+
+    - name: List files in the artifact directory
+      shell: bash
+      run: |
+        ls -l ./nightly/
+      
+    - name: Get Current Time
+      uses: 1466587594/get-current-time@v1.0.0
+      id: current-time
+      with:
+        format: YYYYMMDD
+    
+    - name: Use current time
+      env:
+        TIME: "${{ steps.current-time.outputs.time }}"
+        F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
+      run: echo $TIME $F_TIME
+
+    - name: Delete Older Releases
       if: matrix.os == 'ubuntu-latest'
+      uses: dev-drprasad/delete-older-releases@v0.1.0
+      with:
+        keep_latest: 30
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create a Release
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ steps.current-time.outputs.formattedTime }}
+        name: ${{ steps.current-time.outputs.formattedTime }} nightly build
+        bodyFile: bodyFile 
+        allowUpdates: true
+        draft: false
+        token: ${{ secrets.GITHUB_TOKEN }}  
+  
+    # Deploy releases
+    - name: Upload compiled executables to the latest GitHub release
       uses: svenstaro/upload-release-action@2.0.0
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./modflow6/doc/mf6io/mf6io.nightlybuild.pdf
-        asset_name: mf6io.pdf
+        file: ./nightly/*
         tag: ${{ steps.current-time.outputs.formattedTime }}
         overwrite: true
-        
