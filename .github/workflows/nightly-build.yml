@@ -238,6 +238,8 @@ jobs:
         pwd
         cat ./nightly/bodyFileWindows ./nightly/bodyFileMac ./nightly/bodyFileLinux > bodyFile
         ls -l ./
+        rm ./nightly/bodyFile*
+        ls -l ./nightly/
       
     - name: Get Current Time
       uses: 1466587594/get-current-time@v1.0.0
@@ -277,6 +279,7 @@ jobs:
         file: ./nightly/*
         tag: ${{ steps.current-time.outputs.formattedTime }}
         overwrite: true
+        file_glob: true
 
     - name: Delete Artifact
       uses: GeekyEggo/delete-artifact@v1.0.0
