@@ -10,7 +10,7 @@ on:
       - master
 
 jobs:
-  release:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -44,11 +44,29 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo ln -fs /usr/bin/gfortran-9 /usr/local/bin/gfortran
+        sudo ln -fs /usr/bin/gcc-9 /usr/local/bin/gcc
+        sudo ln -fs /usr/bin/gcc-9 /usr/local/bin/gfortran
+    
+    - name: Install gfortran on MacOS, if necessart
+      shell: bash
+      if: runner.os == 'macOS'
+      run: |
+        if ! command -v gfortran &> /dev/null
+        then
+            brew cask info gfortran
+            brew cask install gfortran
+            ls -l /usr/local/gfortran/bin/
+            sudo ln -fs /usr/local/gfortran/bin/gfortran /usr/local/bin/gfortran
+            sudo ln -fs /usr/local/gfortran/bin/gcc /usr/local/bin/gcc
+            sudo ln -fs /usr/local/gfortran/bin/g++ /usr/local/bin/g++
+        fi
 
-    - name: Print gfortran version
+    - name: Print GNU compiler versions
       shell: bash
       run: |
         gfortran --version
+        gcc --version
+        g++ --version
         
     - name: Build bodyFile with gfortran information
       if: runner.os == 'Linux'
