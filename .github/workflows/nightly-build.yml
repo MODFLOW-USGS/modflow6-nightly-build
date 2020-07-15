@@ -121,9 +121,14 @@ jobs:
         cd ./modflow6/
         nosetests -v -w ./distribution build_nightly.py
         cd ../
+    
+    - name: Move the build zip file
+      shell: bash
+      run: |
+        mv ./modflow6/distribution/temp/${{ matrix.artifact_name }} ./${{ matrix.artifact_name }}
+        ls -l ./
         
     - name: Build bodyFile with gfortran information
-      if: runner.os == 'Linux'
       shell: python
       run: |
         import sys
@@ -197,7 +202,7 @@ jobs:
       with:
         name: nightly
         path: |
-          ./modflow6/distribution/temp/${{ matrix.artifact_name }}
+          ./${{ matrix.artifact_name }}
           ./${{ matrix.body_name }}
 
     - name: Upload additional Build Artifacts
@@ -219,21 +224,19 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: nightly
-        path: ./ 
+        path: ./nightly/ 
 
     - name: List files in the artifact directory
       shell: bash
       run: |
         pwd
-        ls -l ./
         ls -l ./nightly/
         
-    - name: concatenate 
+    - name: concatenate os specific bodyFiles
       shell: bash
       run: |
-        cd ./nightly
-        cat bodyFileWindows bodyFileMac bodyFileLinux > ../bodyFile
-        cd ../
+        pwd
+        cat ./nightly/bodyFileWindows ./nightly/bodyFileMac ./nightly/bodyFileLinux > bodyFile
         ls -l ./
       
     - name: Get Current Time
