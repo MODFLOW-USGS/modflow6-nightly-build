@@ -55,15 +55,12 @@ jobs:
       shell: bash
       if: runner.os == 'macOS'
       run: |
-        if ! command -v gfortran &> /dev/null
-        then
-            brew cask info gfortran
-            brew cask install gfortran
-            ls -l /usr/local/gfortran/bin/
-            sudo ln -fs /usr/local/gfortran/bin/gfortran /usr/local/bin/gfortran
-            sudo ln -fs /usr/local/gfortran/bin/gcc /usr/local/bin/gcc
-            sudo ln -fs /usr/local/gfortran/bin/g++ /usr/local/bin/g++
-        fi
+        brew cask info gfortran
+        brew cask install gfortran
+        ls -l /usr/local/gfortran/bin/
+        sudo ln -fs /usr/local/gfortran/bin/gfortran /usr/local/bin/gfortran
+        sudo ln -fs /usr/local/gfortran/bin/gcc /usr/local/bin/gcc
+        sudo ln -fs /usr/local/gfortran/bin/g++ /usr/local/bin/g++
 
     - name: Print GNU compiler versions
       shell: bash
