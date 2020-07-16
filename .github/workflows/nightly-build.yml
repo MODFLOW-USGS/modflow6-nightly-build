@@ -51,7 +51,7 @@ jobs:
         sudo ln -fs /usr/bin/gcc-9 /usr/local/bin/gcc
         sudo ln -fs /usr/bin/g++-9 /usr/local/bin/g++
     
-    - name: Install gfortran on MacOS, if necessary
+    - name: Install and setup symbolic link to gfortran on MacOS
       shell: bash
       if: runner.os == 'macOS'
       run: |
@@ -85,7 +85,6 @@ jobs:
         ls ./
 
     - name: Update flopy MODFLOW 6 classes
-      if: matrix.os == 'ubuntu-latest'
       run: |
         cd ./modflow6/autotest
         python update_flopy.py
@@ -229,7 +228,7 @@ jobs:
         pwd
         ls -l ./nightly/
         
-    - name: concatenate os specific bodyFiles
+    - name: Concatenate os specific bodyFiles
       shell: bash
       run: |
         pwd
