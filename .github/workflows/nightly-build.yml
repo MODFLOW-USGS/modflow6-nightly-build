@@ -200,7 +200,7 @@ jobs:
         import subprocess
         
         ws = "./modflow6/doc/mf6io/"
-        bibnam = "mf6io.nightlybuild.tex"
+        bibnam = "mf6io.nightlybuild"
         texnam = bibnam + ".tex"
         cmds = [
                 ["pdflatex", texnam],
@@ -208,7 +208,8 @@ jobs:
                 ["pdflatex", texnam],
                 ["pdflatex", texnam],
                ]
-        for cmd in cmds:               
+        for cmd in cmds:
+            print("running command...'{}'".format(" ".join(cmd)))               
             with subprocess.Popen(cmd,
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.STDOUT,
