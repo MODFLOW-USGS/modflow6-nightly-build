@@ -214,7 +214,14 @@ jobs:
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.STDOUT,
                                   cwd=ws) as process:
-                output, unused_err = process.communicate(timeout=10)
+                stdout, stderr = process.communicate(timeout=10)
+                if stdout:
+                    stdout = stdout.decode()
+                    print(stdout)
+                if stderr:
+                    print("\n\nError condition occurred:\n")
+                    stderr = stderr.decode()
+                    print(stderr)
     
     - name: Rename and move the LaTeX document
       if: runner.os == 'Linux'
