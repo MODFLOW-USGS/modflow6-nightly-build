@@ -68,6 +68,13 @@ jobs:
         gfortran --version
         gcc --version
         g++ --version
+
+    - name: Install TeX Live
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        #sudo apt install texlive-latex-extra
+        sudo apt install texlive-science
         
     - name: Clone MODFLOW 6 repo
       run: |
@@ -185,12 +192,6 @@ jobs:
     #  with:
     #    root_file: mf6io.nightlybuild.tex
     #    working_directory: /github/workspace/modflow6/doc/mf6io/
-
-    - name: Install TeX Live
-      if: runner.os == 'Linux'
-      shell: bash
-      run: |
-        sudo apt install texlive-latex-extra
 
     - name: Build mf6io latex document
       if: runner.os == 'Linux'
