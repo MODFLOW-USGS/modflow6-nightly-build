@@ -73,7 +73,7 @@ jobs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        #sudo apt install texlive-latex-extra
+        sudo apt install texlive-latex-extra
         sudo apt install texlive-science
         
     - name: Clone MODFLOW 6 repo
