@@ -179,12 +179,41 @@ jobs:
         dst = "./doc/"
         shutil.copytree(src, dst)  
 
+    #- name: Build mf6io latex document
+    #  if: runner.os == 'Linux'
+    #  uses: xu-cheng/latex-action@v2
+    #  with:
+    #    root_file: mf6io.nightlybuild.tex
+    #    working_directory: /github/workspace/modflow6/doc/mf6io/
+
+    - name: Install TeX Live
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt install texlive-latex-extra
+
     - name: Build mf6io latex document
       if: runner.os == 'Linux'
-      uses: xu-cheng/latex-action@v2
-      with:
-        root_file: mf6io.nightlybuild.tex
-        working_directory: /github/workspace/modflow6/doc/mf6io/
+      shell: python
+      run: |
+        import sys
+        import subprocess
+        
+        ws = "./modflow6/doc/mf6io/"
+        bibnam = "mf6io.nightlybuild.tex"
+        texnam = bibnam + ".tex"
+        cmds = [
+                ["pdflatex", texnam],
+                ["bibtex", bibnam],
+                ["pdflatex", texnam],
+                ["pdflatex", texnam],
+               ]
+        for cmd in cmds:               
+            with subprocess.Popen(cmd,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.STDOUT,
+                                  cwd=ws) as process:
+                output, unused_err = process.communicate(timeout=10)
     
     - name: Rename and move the LaTeX document
       if: runner.os == 'Linux'
