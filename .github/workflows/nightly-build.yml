@@ -68,13 +68,6 @@ jobs:
         gfortran --version
         gcc --version
         g++ --version
-
-    - name: Install TeX Live
-      if: runner.os == 'Linux'
-      shell: bash
-      run: |
-        sudo apt install texlive-latex-extra
-        sudo apt install texlive-science
         
     - name: Clone MODFLOW 6 repo
       run: |
@@ -186,12 +179,11 @@ jobs:
         dst = "./doc/"
         shutil.copytree(src, dst)  
 
-    #- name: Build mf6io latex document
-    #  if: runner.os == 'Linux'
-    #  uses: xu-cheng/latex-action@v2
-    #  with:
-    #    root_file: mf6io.nightlybuild.tex
-    #    working_directory: /github/workspace/modflow6/doc/mf6io/
+    - name: Install TeX Live
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt install texlive-latex-extra texlive-science
 
     - name: Build mf6io latex document
       if: runner.os == 'Linux'
