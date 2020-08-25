@@ -147,7 +147,7 @@ jobs:
             fpth = "bodyFileWindows"
             msg = "Windows executables are statically linked and can be run " + \
                   "without gfortran being installed. In order to use the MODFLOW 6 " + \
-                  "dynamic-link library (libmf6.dll) on Windows, the MinGW  " + \
+                  "dynamic-link library (libmf6.dll) on Windows, the Mingw-w64 " + \
                   "version of gfortran version {} ".format(version) + \
                   "will need to be installed locally.\n\n"
         elif osname == "darwin":
