@@ -30,7 +30,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: setup-conda
-      uses: s-weigand/setup-conda@v1.0.3
+      uses: s-weigand/setup-conda@v1.0.5
       with:
         auto-update-conda: true
         miniconda-version: "latest"
