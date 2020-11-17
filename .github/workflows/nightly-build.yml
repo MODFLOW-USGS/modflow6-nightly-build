@@ -32,8 +32,7 @@ jobs:
     - name: setup-conda
       uses: s-weigand/setup-conda@v1.0.5
       with:
-        auto-update-conda: true
-        miniconda-version: "latest"
+        update-conda: true
     
     - name: Install python packages
       run: |
