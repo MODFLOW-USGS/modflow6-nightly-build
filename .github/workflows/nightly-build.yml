@@ -285,7 +285,7 @@ jobs:
       uses: dev-drprasad/delete-older-releases@v0.1.0
       with:
         repo: MODFLOW-USGS/modflow6-nightly-build
-        keep_latest: 10
+        keep_latest: 30
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
