@@ -48,22 +48,17 @@ jobs:
     - name: Setup symbolic link to gfortran on Linux
       if: runner.os == 'Linux'
       run: |
-        sudo ln -fs /usr/bin/gfortran-9 /usr/local/bin/gfortran
-        sudo ln -fs /usr/bin/gcc-9 /usr/local/bin/gcc
-        sudo ln -fs /usr/bin/g++-9 /usr/local/bin/g++
+        sudo ln -fs /usr/bin/gfortran-10 /usr/local/bin/gfortran
+        sudo ln -fs /usr/bin/gcc-10 /usr/local/bin/gcc
+        sudo ln -fs /usr/bin/g++-10 /usr/local/bin/g++
     
     - name: Install and setup symbolic link to gfortran on MacOS
       shell: bash
       if: runner.os == 'macOS'
       run: |
-        if ! command -v gfortran &> /dev/null
-        then
-            brew info --cask gfortran
-            brew install --cask gfortran
-            ls -l /usr/local/gfortran/bin/
-            sudo ln -fs /usr/local/gfortran/bin/gfortran /usr/local/bin/gfortran
-            sudo ln -fs /usr/local/gfortran/bin/gcc /usr/local/bin/gcc
-            sudo ln -fs /usr/local/gfortran/bin/g++ /usr/local/bin/g++
+        sudo ln -fs /usr/bin/gfortran-10 /usr/local/bin/gfortran
+        sudo ln -fs /usr/bin/gcc-10 /usr/local/bin/gcc
+        sudo ln -fs /usr/bin/g++-10 /usr/local/bin/g++
 
     - name: Print GNU compiler versions
       shell: bash
