@@ -5,3 +5,6 @@
 # SPDX-License-Identifier: MIT
 
 source /opt/intel/oneapi/setvars.sh
+
+# print ifort version
+ifort --version

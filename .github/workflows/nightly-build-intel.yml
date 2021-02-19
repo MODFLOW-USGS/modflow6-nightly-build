@@ -110,9 +110,9 @@ jobs:
         .github/intel-scripts/install_macos.sh $MACOS_HPCKIT_URL $MACOS_FORTRAN_COMPONENTS
         .github/intel-scripts/ifortvars_macos.sh
 
-    - name: Print Intel fortran compiler versions
-      run: |
-        ifort --version
+#    - name: Print Intel fortran compiler versions
+#      run: |
+#        ifort --version
 
     - name: Clone MODFLOW 6 repo
       run: |
