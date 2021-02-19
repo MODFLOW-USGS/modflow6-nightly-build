@@ -67,20 +67,6 @@ jobs:
         pip install https://github.com/modflowpy/flopy/zipball/develop
         pip install https://github.com/modflowpy/pymake/zipball/master
 
-    - name: cache install ifort on windows
-      if: runner.os == 'Windows'
-      id: cache-install-windows
-      uses: actions/cache@v2
-      with:
-        path: C:\Program Files (x86)\Intel\oneAPI\compiler
-        key: install-${{ env.WINDOWS_HPCKIT_URL }}-${{ env.WINDOWS_FORTRAN_COMPONENTS }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_windows.sh') }}
-
-    - name: install and activate ifort on windows
-      if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
-      run: |
-        .github/intel-scripts/install_windows.bat $WINDOWS_HPCKIT_URL $WINDOWS_FORTRAN_COMPONENTS
-        .github/intel-scripts/ifortvars_windows.bat
-
     - name: cache install ifort on linux
       if: runner.os == 'Linux'
       id: cache-install-linux
@@ -90,11 +76,10 @@ jobs:
           /opt/intel/oneapi/compiler
         key: install-${{ env.LINUX_HPCKIT_URL }}-${{ env.LINUX_FORTRAN_COMPONENTS_WEB }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_linux.sh') }}
 
-    - name: install and activate ifort on linux
+    - name: install ifort on linux
       if: runner.os == 'Linux' && steps.cache-install-linux.outputs.cache-hit != 'true'
       run: |
         .github/intel-scripts/install_linux.sh $LINUX_HPCKIT_URL $LINUX_FORTRAN_COMPONENTS_WEB
-        .github/intel-scripts/ifortvars_linux.sh
 
     - name: cache install ifort on macos
       if: runner.os == 'macOS'
@@ -104,15 +89,23 @@ jobs:
         path: /opt/intel/oneapi
         key: install-${{ env.MACOS_HPCKIT_URL }}-${{ env.MACOS_FORTRAN_COMPONENTS }}
 
-    - name: install and activate ifort on macos
+    - name: install ifort on macos
       if: runner.os == 'macOS' && steps.cache-install-macos.outputs.cache-hit != 'true'
       run: |
         .github/intel-scripts/install_macos.sh $MACOS_HPCKIT_URL $MACOS_FORTRAN_COMPONENTS
-        .github/intel-scripts/ifortvars_macos.sh
 
-#    - name: Print Intel fortran compiler versions
-#      run: |
-#        ifort --version
+    - name: cache install ifort on windows
+      if: runner.os == 'Windows'
+      id: cache-install-windows
+      uses: actions/cache@v2
+      with:
+        path: C:\Program Files (x86)\Intel\oneAPI\compiler
+        key: install-${{ env.WINDOWS_HPCKIT_URL }}-${{ env.WINDOWS_FORTRAN_COMPONENTS }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_windows.sh') }}
+
+    - name: install ifort on windows
+      if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
+      run: |
+        .github/intel-scripts/install_windows.bat $WINDOWS_HPCKIT_URL $WINDOWS_FORTRAN_COMPONENTS
 
     - name: Clone MODFLOW 6 repo
       run: |
@@ -128,45 +121,61 @@ jobs:
         pwd
         ls ./
 
-#    - name: Update flopy MODFLOW 6 classes
-#      run: |
-#        cd ./modflow6/autotest
-#        python update_flopy.py
-#        cd ../../
-#
-#    - name: Print python package versions
-#      shell: python
-#      run: |
-#        import sys
-#        import nose
-#        import numpy as np
-#        import matplotlib as mpl
-#        import flopy
-#        import pymake
-#        flopypth = flopy.__path__[0]
-#        pymakepth = pymake.__path__[0]
-#        print("python version:     {}".format(sys.version))
-#        print("nosetest version:   {}".format(nose.__version__))
-#        print("numpy version:      {}".format(np.__version__))
-#        print("matplotlib version: {}".format(mpl.__version__))
-#        print("flopy version:      {}".format(flopy.__version__))
-#        print("pymake version:     {}".format(pymake.__version__))
-#        print("")
-#        print("flopy is installed in:  {}".format(flopypth))
-#        print("pymake is installed in: {}".format(pymakepth))
-#
-#    - name: Build and zip applications
-#      shell: bash
-#      run: |
-#        cd ./modflow6/
-#        nosetests -v -w ./distribution build_nightly.py
-#        cd ../
-#
-#    - name: Move the build zip file
-#      shell: bash
-#      run: |
-#        mv ./modflow6/distribution/temp/${{ matrix.artifact_name }} ./${{ matrix.artifact_name }}
-#        ls -l ./
+    - name: Update flopy MODFLOW 6 classes
+      run: |
+        cd ./modflow6/autotest
+        python update_flopy.py
+        cd ../../
+
+    - name: Print python package versions
+      shell: python
+      run: |
+        import sys
+        import nose
+        import numpy as np
+        import matplotlib as mpl
+        import flopy
+        import pymake
+        flopypth = flopy.__path__[0]
+        pymakepth = pymake.__path__[0]
+        print("python version:     {}".format(sys.version))
+        print("nosetest version:   {}".format(nose.__version__))
+        print("numpy version:      {}".format(np.__version__))
+        print("matplotlib version: {}".format(mpl.__version__))
+        print("flopy version:      {}".format(flopy.__version__))
+        print("pymake version:     {}".format(pymake.__version__))
+        print("")
+        print("flopy is installed in:  {}".format(flopypth))
+        print("pymake is installed in: {}".format(pymakepth))
+
+    - name: Build and zip applications on linux
+      if: runner.os == 'Linux'
+      run: |
+        .github/intel-scripts/ifortvars_linux.sh
+        cd ./modflow6/
+        python ./distribution build_nightly.py -fc ifort
+        cd ../
+
+    - name: Build and zip applications on macos
+      if: runner.os == 'macOS'
+      run: |
+        .github/intel-scripts/ifortvars_macos.sh
+        cd ./modflow6/
+        python ./distribution build_nightly.py -fc ifort
+        cd ../
+
+    - name: Build and zip applications on windows
+      if: runner.os == 'Windows'
+      run: |
+        .github/intel-scripts/ifortvars_windows.bat
+        cd ./modflow6/
+        python ./distribution build_nightly.py -fc ifort
+        cd ../
+
+    - name: Move the build zip file
+      run: |
+        mv ./modflow6/distribution/temp/${{ matrix.artifact_name }} ./${{ matrix.artifact_name }}
+        ls -l ./
 #
 #    - name: Build bodyFile with gfortran information
 #      shell: python
@@ -283,6 +292,17 @@ jobs:
 #        name: nightly
 #        path: |
 #          ./mf6io.pdf
+
+    - name: exclude unused files from cache on windows
+      if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        .github/intel-scripts/cache_exclude_windows.sh
+
+    - name: exclude unused files from cache on linux
+      if: runner.os == 'Linux' && steps.cache-install-linux.outputs.cache-hit != 'true'
+      run: |
+        .github/intel-scripts/cache_exclude_linux.sh
 #
 #  # make the release if previous job was successful
 #  release:
