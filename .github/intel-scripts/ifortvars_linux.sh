@@ -7,7 +7,7 @@
 #shellcheck disable=SC2010
 LATEST_VERSION=$(ls -1 /opt/intel/oneapi/compiler/ | grep -v latest | sort | tail -1)
 # shellcheck source=/dev/null
-source /opt/intel/oneapi/compiler/"$LATEST_VERSION"/env/vars.sh
+export ONEAPI_DIR="/opt/intel/oneapi/compiler/$LATEST_VERSION/env/"
+echo "source $ONEAPI_DIR/vars.sh --install" >> "$HOME/.bash_profile"
 
-# print ifort version
-ifort --version
+# source /opt/intel/oneapi/compiler/"$LATEST_VERSION"/env/vars.sh
