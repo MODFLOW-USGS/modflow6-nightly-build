@@ -9,8 +9,6 @@ LATEST_VERSION=$(ls -1 /opt/intel/oneapi/compiler/ | grep -v latest | sort | tai
 # shellcheck source=/dev/null
 export ONEAPI_DIR="/opt/intel/oneapi/compiler/$LATEST_VERSION/env/"
 echo "$ONEAPI_DIR"
-echo "source $ONEAPI_DIR/vars.sh --install" >> "$HOME/.bash_profile"
+echo "source $ONEAPI_DIR/vars.sh --install" >> "$HOME/.bashrc"
 
-source /opt/intel/oneapi/compiler/"$LATEST_VERSION"/env/vars.sh
-
-which ifort
+#source /opt/intel/oneapi/compiler/"$LATEST_VERSION"/env/vars.sh

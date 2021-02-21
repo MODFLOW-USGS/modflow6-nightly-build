@@ -47,25 +47,11 @@ jobs:
             body_name: bodyFileWindows
     defaults:
       run:
-        shell: bash
+        shell: bash -l {0}
 
     steps:
     - name: Checkout this github repo
       uses: actions/checkout@v2.3.4
-
-    - name: setup-conda
-      uses: s-weigand/setup-conda@v1.0.5
-      with:
-        update-conda: true
-
-    - name: Install python packages
-      run: |
-        conda info
-        conda install pip requests appdirs nose
-        # use pip to install numpy and matplotlib because of a windows issue
-        pip install numpy matplotlib
-        pip install https://github.com/modflowpy/flopy/zipball/develop
-        pip install https://github.com/modflowpy/pymake/zipball/master
 
     - name: cache install ifort on linux
       if: runner.os == 'Linux'
@@ -111,6 +97,20 @@ jobs:
       if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
       run: |
         .github/intel-scripts/install_windows.bat $WINDOWS_HPCKIT_URL $WINDOWS_FORTRAN_COMPONENTS
+
+    - name: setup-conda
+      uses: s-weigand/setup-conda@v1.0.5
+      with:
+        update-conda: true
+
+    - name: Install python packages
+      run: |
+        conda info
+        conda install pip requests appdirs nose
+        # use pip to install numpy and matplotlib because of a windows issue
+        pip install numpy matplotlib
+        pip install https://github.com/modflowpy/flopy/zipball/develop
+        pip install https://github.com/modflowpy/pymake/zipball/master
 
     - name: Clone MODFLOW 6 repo
       run: |
