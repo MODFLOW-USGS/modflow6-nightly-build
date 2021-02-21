@@ -47,7 +47,7 @@ jobs:
             body_name: bodyFileWindows
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash {0}
 
     steps:
     - name: Checkout this github repo
@@ -67,10 +67,10 @@ jobs:
       run: |
         .github/intel-scripts/install_linux.sh $LINUX_HPCKIT_URL $LINUX_FORTRAN_COMPONENTS_WEB
 
-#    - name: initialize ifort on linux
-#      if: runner.os == 'Linux'
-#      run: |
-#        .github/intel-scripts/ifortvars_linux.sh
+    - name: initialize ifort on linux
+      if: runner.os == 'Linux'
+      run: |
+        .github/intel-scripts/ifortvars_linux.sh
 
     - name: cache install ifort on macos
       if: runner.os == 'macOS'
@@ -156,8 +156,6 @@ jobs:
     - name: Build and zip applications on linux
       if: runner.os == 'Linux'
       run: |
-        .github/intel-scripts/ifortvars_linux.sh
-        ifort --version
         cd ./modflow6/distribution/
         python build_nightly.py -fc ifort
         cd ../../
