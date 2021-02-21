@@ -15,9 +15,9 @@ IF "%VS_VER%"=="2019_build_tools" (
 for /f "tokens=* usebackq" %%f in (`dir /b "C:\Program Files (x86)\Intel\oneAPI\compiler\" ^| findstr /V latest ^| sort`) do @set "LATEST_VERSION=%%f"
 @call "C:\Program Files (x86)\Intel\oneAPI\compiler\%LATEST_VERSION%\env\vars.bat"
 
-REM print ifort version
-ifort /V
+ifort.exe
+where ifort.exe
 
 cd ./modflow6/distribution/
-python build_nightly.py -fc ifort
+python build_nightly.py -fc ifort.exe
 cd ../../

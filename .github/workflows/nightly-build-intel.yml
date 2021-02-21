@@ -67,11 +67,6 @@ jobs:
       run: |
         .github/intel-scripts/install_linux.sh $LINUX_HPCKIT_URL $LINUX_FORTRAN_COMPONENTS_WEB
 
-    - name: initialize ifort on linux
-      if: runner.os == 'Linux'
-      run: |
-        .github/intel-scripts/ifortvars_linux.sh
-
     - name: cache install ifort on macos
       if: runner.os == 'macOS'
       id: cache-install-macos
