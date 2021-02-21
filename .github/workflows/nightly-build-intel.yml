@@ -47,7 +47,7 @@ jobs:
             body_name: bodyFileWindows
     defaults:
       run:
-        shell: bash {0}
+        shell: bash
 
     steps:
     - name: Checkout this github repo
@@ -156,25 +156,17 @@ jobs:
     - name: Build and zip applications on linux
       if: runner.os == 'Linux'
       run: |
-        cd ./modflow6/distribution/
-        python build_nightly.py -fc ifort
-        cd ../../
+        .github/intel-scripts/ifortvars_linux.sh
 
     - name: Build and zip applications on macos
       if: runner.os == 'macOS'
       run: |
         .github/intel-scripts/ifortvars_macos.sh
-        cd ./modflow6/distribution/
-        python build_nightly.py -fc ifort
-        cd ../../
 
     - name: Build and zip applications on windows
       if: runner.os == 'Windows'
       run: |
         .github/intel-scripts/ifortvars_windows.bat
-        cd ./modflow6/distribution/
-        python build_nightly.py -fc ifort
-        cd ../../
 
     - name: Move the build zip file
       run: |

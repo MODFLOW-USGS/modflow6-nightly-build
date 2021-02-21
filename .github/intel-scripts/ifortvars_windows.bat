@@ -16,4 +16,8 @@ for /f "tokens=* usebackq" %%f in (`dir /b "C:\Program Files (x86)\Intel\oneAPI\
 @call "C:\Program Files (x86)\Intel\oneAPI\compiler\%LATEST_VERSION%\env\vars.bat"
 
 REM print ifort version
-ifort -V
+ifort /V
+
+cd ./modflow6/distribution/
+python build_nightly.py -fc ifort
+cd ../../
