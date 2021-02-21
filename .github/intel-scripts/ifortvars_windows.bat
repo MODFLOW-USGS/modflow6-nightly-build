@@ -19,5 +19,5 @@ ifort.exe
 where ifort.exe
 
 cd ./modflow6/distribution/
-python build_nightly.py -fc ifort.exe
+python build_nightly.py -fc ifort
 cd ../../
