@@ -148,6 +148,8 @@ jobs:
     - name: Build and zip applications on linux
       if: runner.os == 'Linux'
       run: |
+        echo "Recusrsive listing of /opt/intel/oneapi/"
+        ls -lhR /opt/intel/oneapi/
         .github/intel-scripts/ifortvars_linux.sh
 
     - name: Build and zip applications on macos
