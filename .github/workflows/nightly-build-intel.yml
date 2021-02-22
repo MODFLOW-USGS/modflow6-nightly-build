@@ -20,17 +20,9 @@ on:
     branches:
       - master
 
-env:
-  WINDOWS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/17392/w_HPCKit_p_2021.1.0.2682_offline.exe
-  LINUX_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/17427/l_HPCKit_p_2021.1.0.2684_offline.sh
-  MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/17398/m_HPCKit_p_2021.1.0.2681_offline.dmg
-  WINDOWS_FORTRAN_COMPONENTS: intel.oneapi.win.ifort-compiler
-  LINUX_FORTRAN_COMPONENTS_WEB: intel.oneapi.lin.ifort-compiler
-  MACOS_FORTRAN_COMPONENTS: intel.oneapi.mac.ifort-compiler
-
 jobs:
   build_for_os:
-    name: compile on linux, macos, and windows
+    name: compile step
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -45,6 +37,14 @@ jobs:
     defaults:
       run:
         shell: bash
+
+    env:
+      WINDOWS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/17392/w_HPCKit_p_2021.1.0.2682_offline.exe
+      LINUX_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/17427/l_HPCKit_p_2021.1.0.2684_offline.sh
+      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/17398/m_HPCKit_p_2021.1.0.2681_offline.dmg
+      WINDOWS_FORTRAN_COMPONENTS: intel.oneapi.win.ifort-compiler
+      LINUX_FORTRAN_COMPONENTS_WEB: intel.oneapi.lin.ifort-compiler
+      MACOS_FORTRAN_COMPONENTS: intel.oneapi.mac.ifort-compiler
 
     steps:
     - name: Checkout this github repo
@@ -279,7 +279,7 @@ jobs:
       run: echo $TIME $F_TIME
 
     - name: Delete Older Releases
-      uses: dev-drprasad/delete-older-releases@v0.1.0
+      uses: dev-drprasad/delete-older-releases@v0.2.0
       with:
         repo: MODFLOW-USGS/modflow6-nightly-build
         keep_latest: 7
