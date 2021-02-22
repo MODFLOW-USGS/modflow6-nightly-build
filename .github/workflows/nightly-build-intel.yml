@@ -22,7 +22,7 @@ on:
 
 jobs:
   build_for_os:
-    name: compile step
+    name: compile code
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

@@ -7,14 +7,17 @@
 #shellcheck disable=SC2010
 LATEST_VERSION=$(ls -1 /opt/intel/oneapi/compiler/ | grep -v latest | sort | tail -1)
 
-ls -l /opt/intel/oneapi/
-ls -l /opt/intel/oneapi/compiler/
-ls -l /opt/intel/oneapi/compiler/"$LATEST_VERSION"
-ls -l /opt/intel/oneapi/compiler/"$LATEST_VERSION"/env/
+ls -lh /opt/intel/oneapi/
+
+ls -lh /opt/intel/oneapi/compiler/
+
+ls -lh /opt/intel/oneapi/compiler/"$LATEST_VERSION"/
+
+ls -lh /opt/intel/oneapi/compiler/"$LATEST_VERSION"/env/
 
 # shellcheck source=/dev/null
-source /opt/intel/oneapi/compiler/setvars.sh
-#source /opt/intel/oneapi/compiler/"$LATEST_VERSION"/env/vars.sh
+source /opt/intel/oneapi/setvars.sh
+source /opt/intel/oneapi/compiler/"$LATEST_VERSION"/env/vars.sh
 
 cd ./modflow6/distribution/
 python build_nightly.py -fc ifort
