@@ -38,13 +38,10 @@ jobs:
         include:
           - os: ubuntu-20.04
             artifact_name: linux.zip
-            body_name: bodyFileLinux
           - os: macos-latest
             artifact_name: mac.zip
-            body_name: bodyFileMac
           - os: windows-latest
             artifact_name: win64.zip
-            body_name: bodyFileWindows
     defaults:
       run:
         shell: bash
@@ -168,122 +165,76 @@ jobs:
       run: |
         mv ./modflow6/distribution/temp/${{ matrix.artifact_name }} ./${{ matrix.artifact_name }}
         ls -l ./
-#
-#    - name: Build bodyFile with gfortran information
-#      shell: python
-#      run: |
-#        import sys
-#        import subprocess
-#
-#        argv = ["gfortran", "--version"]
-#        with subprocess.Popen(argv,
-#                              stdout=subprocess.PIPE,
-#                              stderr=subprocess.STDOUT,
-#                              cwd=".") as process:
-#            output, unused_err = process.communicate(timeout=10)
-#            buff = output.decode("utf-8")
-#
-#        version = buff.splitlines()[0].split()[-1]
-#        major = version.split(".")[0]
-#
-#        osname = sys.platform.lower()
-#
-#        if osname == "win32":
-#            fpth = "bodyFileWindows"
-#            msg = "Windows executables are statically linked and can be run " + \
-#                  "without gfortran being installed. In order to use the MODFLOW 6 " + \
-#                  "dynamic-link library (libmf6.dll) on Windows, the Mingw-w64 " + \
-#                  "version of gfortran version {} ".format(version) + \
-#                  "will need to be installed locally.\n\n"
-#        elif osname == "darwin":
-#            fpth = "bodyFileMac"
-#            msg = "On MacOS, the gfortran compiler used to compile the " + \
-#                  "MODFLOW 6 executables and shared object (libmf6.so) will need " + \
-#                  "to be installed locally. The MODFLOW 6 executables and shared " + \
-#                  "object were compiled on MacOS using Homebrew gfortran " + \
-#                  "version {}.\n\n".format(version)
-#        else:
-#            fpth = "bodyFileLinux"
-#            msg = "On Linux, the gfortran compiler used to compile the " + \
-#                  "MODFLOW 6 executables and shared object (libmf6.so) will need " + \
-#                  "to be installed locally. The MODFLOW 6 executables and shared " + \
-#                  "object were compiled on Linux using gfortran " + \
-#                  "version {}.\n\n".format(version)
-#
-#        f = open(fpth, "w")
-#        f.write(msg)
-#        f.close()
-#
-#    # Build LaTeX document
-#    - name: Copy the modflow6/docs directory
-#      if: runner.os == 'Linux'
-#      shell: python
-#      run: |
-#        import shutil
-#        src = "/home/runner/work/modflow6-nightly-build/modflow6-nightly-build/modflow6/doc/"
-#        dst = "./doc/"
-#        shutil.copytree(src, dst)
-#
-#    - name: Install TeX Live
-#      if: runner.os == 'Linux'
-#      shell: bash
-#      run: |
-#        sudo apt install texlive-latex-extra texlive-science
-#
-#    - name: Build mf6io latex document
-#      if: runner.os == 'Linux'
-#      shell: python
-#      run: |
-#        import sys
-#        import subprocess
-#
-#        ws = "./modflow6/doc/mf6io/"
-#        bibnam = "mf6io.nightlybuild"
-#        texnam = bibnam + ".tex"
-#        cmds = [
-#                ["pdflatex", texnam],
-#                ["bibtex", bibnam],
-#                ["pdflatex", texnam],
-#                ["pdflatex", texnam],
-#               ]
-#        for cmd in cmds:
-#            print("running command...'{}'".format(" ".join(cmd)))
-#            with subprocess.Popen(cmd,
-#                                  stdout=subprocess.PIPE,
-#                                  stderr=subprocess.STDOUT,
-#                                  cwd=ws) as process:
-#                stdout, stderr = process.communicate(timeout=10)
-#                if stdout:
-#                    stdout = stdout.decode()
-#                    print(stdout)
-#                if stderr:
-#                    print("\n\nError condition occurred:\n")
-#                    stderr = stderr.decode()
-#                    print(stderr)
-#
-#    - name: Rename and move the LaTeX document
-#      if: runner.os == 'Linux'
-#      shell: bash
-#      run: |
-#        ls -la ./modflow6/doc/mf6io/
-#        mv ./modflow6/doc/mf6io/mf6io.nightlybuild.pdf mf6io.pdf
-#        ls -la ./
-#
-#    - name: Upload a Build Artifact
-#      uses: actions/upload-artifact@v2
-#      with:
-#        name: nightly
-#        path: |
-#          ./${{ matrix.artifact_name }}
-#          ./${{ matrix.body_name }}
-#
-#    - name: Upload additional Build Artifacts
-#      if: runner.os == 'Linux'
-#      uses: actions/upload-artifact@v2
-#      with:
-#        name: nightly
-#        path: |
-#          ./mf6io.pdf
+
+    # Build LaTeX document
+    - name: Copy the modflow6/docs directory
+      if: runner.os == 'Linux'
+      shell: python
+      run: |
+        import shutil
+        src = "/home/runner/work/modflow6-nightly-build/modflow6-nightly-build/modflow6/doc/"
+        dst = "./doc/"
+        shutil.copytree(src, dst)
+
+    - name: Install TeX Live
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt install texlive-latex-extra texlive-science
+
+    - name: Build mf6io latex document
+      if: runner.os == 'Linux'
+      shell: python
+      run: |
+        import sys
+        import subprocess
+
+        ws = "./modflow6/doc/mf6io/"
+        bibnam = "mf6io.nightlybuild"
+        texnam = bibnam + ".tex"
+        cmds = [
+                ["pdflatex", texnam],
+                ["bibtex", bibnam],
+                ["pdflatex", texnam],
+                ["pdflatex", texnam],
+               ]
+        for cmd in cmds:
+            print("running command...'{}'".format(" ".join(cmd)))
+            with subprocess.Popen(cmd,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.STDOUT,
+                                  cwd=ws) as process:
+                stdout, stderr = process.communicate(timeout=10)
+                if stdout:
+                    stdout = stdout.decode()
+                    print(stdout)
+                if stderr:
+                    print("\n\nError condition occurred:\n")
+                    stderr = stderr.decode()
+                    print(stderr)
+
+    - name: Rename and move the LaTeX document
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        ls -la ./modflow6/doc/mf6io/
+        mv ./modflow6/doc/mf6io/mf6io.nightlybuild.pdf mf6io.pdf
+        ls -la ./
+
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: nightly
+        path: |
+          ./${{ matrix.artifact_name }}
+
+    - name: Upload additional Build Artifacts
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v2
+      with:
+        name: nightly
+        path: |
+          ./mf6io.pdf
 
     - name: exclude unused files from cache on windows
       if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
@@ -295,76 +246,67 @@ jobs:
       if: runner.os == 'Linux' && steps.cache-install-linux.outputs.cache-hit != 'true'
       run: |
         .github/intel-scripts/cache_exclude_linux.sh
-#
-#  # make the release if previous job was successful
-#  release:
-#    name: Make a nightly release
-#    needs: build_for_os
-#    runs-on: ubuntu-20.04
-#
-#    steps:
-#    - name: Download a Build Artifact
-#      uses: actions/download-artifact@v2
-#      with:
-#        name: nightly
-#        path: ./nightly/
-#
-#    - name: List files in the artifact directory
-#      shell: bash
-#      run: |
-#        pwd
-#        ls -l ./nightly/
-#
-#    - name: Concatenate os specific bodyFiles
-#      shell: bash
-#      run: |
-#        pwd
-#        cat ./nightly/bodyFileWindows ./nightly/bodyFileMac ./nightly/bodyFileLinux > bodyFile
-#        ls -l ./
-#        rm ./nightly/bodyFile*
-#        ls -l ./nightly/
-#
-#    - name: Get Current Time
-#      uses: 1466587594/get-current-time@v2
-#      id: current-time
-#      with:
-#        format: YYYYMMDD
-#
-#    - name: Use current time
-#      env:
-#        TIME: "${{ steps.current-time.outputs.time }}"
-#        F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
-#      run: echo $TIME $F_TIME
-#
-#    - name: Delete Older Releases
-#      uses: dev-drprasad/delete-older-releases@v0.1.0
-#      with:
-#        repo: MODFLOW-USGS/modflow6-nightly-build
-#        keep_latest: 7
-#        delete_tags: true
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#
-#    - name: Create a Release
-#      uses: ncipollo/release-action@v1
-#      with:
-#        tag: ${{ steps.current-time.outputs.formattedTime }}
-#        name: ${{ steps.current-time.outputs.formattedTime }} nightly build
-#        bodyFile: bodyFile
-#        allowUpdates: true
-#        draft: false
-#        token: ${{ secrets.GITHUB_TOKEN }}
-#
-#    - name: Upload compiled executables to the latest GitHub release
-#      uses: svenstaro/upload-release-action@2.2.0
-#      with:
-#        repo_token: ${{ secrets.GITHUB_TOKEN }}
-#        file: ./nightly/*
-#        tag: ${{ steps.current-time.outputs.formattedTime }}
-#        overwrite: true
-#        file_glob: true
-#
-#    - name: Delete Artifact
-#      uses: GeekyEggo/delete-artifact@v1.0.0
-#      with:
-#        name: nightly
+
+  # make the release if previous job was successful
+  release:
+    name: Make a nightly release
+    needs: build_for_os
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Download a Build Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: nightly
+        path: ./nightly/
+
+    - name: List files in the artifact directory
+      shell: bash
+      run: |
+        pwd
+        ls -l ./nightly/
+
+    - name: Get Current Time
+      uses: 1466587594/get-current-time@v2
+      id: current-time
+      with:
+        format: YYYYMMDD
+
+    - name: Use current time
+      env:
+        TIME: "${{ steps.current-time.outputs.time }}"
+        F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
+      run: echo $TIME $F_TIME
+
+    - name: Delete Older Releases
+      uses: dev-drprasad/delete-older-releases@v0.1.0
+      with:
+        repo: MODFLOW-USGS/modflow6-nightly-build
+        keep_latest: 7
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create a Release
+      uses: ncipollo/release-action@v1.8.0
+      with:
+        tag: ${{ steps.current-time.outputs.formattedTime }}
+        name: ${{ steps.current-time.outputs.formattedTime }} nightly build
+        body: "OneAPI version of Intel ifort compiler used to compile executables for all operating systems."
+        allowUpdates: true
+        draft: false
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload compiled executables to the latest GitHub release
+      uses: svenstaro/upload-release-action@2.2.0
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ./nightly/*
+        tag: ${{ steps.current-time.outputs.formattedTime }}
+        overwrite: true
+        file_glob: true
+
+    - name: Delete Artifact
+      uses: GeekyEggo/delete-artifact@v1.0.0
+      with:
+        name: nightly
