@@ -102,8 +102,7 @@ jobs:
         # use pip to install numpy and matplotlib because of a windows issue
         pip install numpy matplotlib
         pip install https://github.com/modflowpy/flopy/zipball/develop
-        # pip install https://github.com/modflowpy/pymake/zipball/master
-        pip install https://github.com/jdhughes-usgs/pymake/zipball/oneAPI
+        pip install https://github.com/modflowpy/pymake/zipball/master
 
     - name: Clone MODFLOW 6 repo
       run: |
@@ -270,7 +269,7 @@ jobs:
       uses: 1466587594/get-current-time@v2
       id: current-time
       with:
-        format: YYYYMMDD
+        format: MM-DD-YYYY
 
     - name: Use current time
       env:
@@ -278,33 +277,17 @@ jobs:
         F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
       run: echo $TIME $F_TIME
 
-    - name: Delete Older Releases
-      uses: dev-drprasad/delete-older-releases@v0.2.0
-      with:
-        repo: MODFLOW-USGS/modflow6-nightly-build
-        keep_latest: 7
-        delete_tags: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Create a Release
       uses: ncipollo/release-action@v1.8.0
       with:
-        tag: ${{ steps.current-time.outputs.formattedTime }}
+        tag: "nightly-build"
         name: ${{ steps.current-time.outputs.formattedTime }} nightly build
         body: "OneAPI version of Intel ifort compiler used to compile executables for all operating systems."
-        allowUpdates: true
         draft: false
+        allowUpdates: true
+        replacesArtifacts: true
+        artifacts: ./nightly/*
         token: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Upload compiled executables to the latest GitHub release
-      uses: svenstaro/upload-release-action@2.2.0
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./nightly/*
-        tag: ${{ steps.current-time.outputs.formattedTime }}
-        overwrite: true
-        file_glob: true
 
     - name: Delete Artifact
       uses: GeekyEggo/delete-artifact@v1.0.0
