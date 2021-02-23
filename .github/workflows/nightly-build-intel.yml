@@ -102,7 +102,7 @@ jobs:
         # use pip to install numpy and matplotlib because of a windows issue
         pip install numpy matplotlib
         pip install https://github.com/modflowpy/flopy/zipball/develop
-        pip install https://github.com/jdhughes-usgs/pymake/zipball/linux-intel-option
+        pip install https://github.com/modflowpy/pymake/zipball/master
 
     - name: Clone MODFLOW 6 repo
       run: |
@@ -148,8 +148,6 @@ jobs:
     - name: Build and zip applications on linux
       if: runner.os == 'Linux'
       run: |
-        echo "Recusrsive listing of /opt/intel/oneapi/"
-        ls -lhR /opt/intel/oneapi/
         .github/intel-scripts/ifortvars_linux.sh
 
     - name: Build and zip applications on macos
