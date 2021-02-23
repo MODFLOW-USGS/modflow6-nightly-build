@@ -102,7 +102,8 @@ jobs:
         # use pip to install numpy and matplotlib because of a windows issue
         pip install numpy matplotlib
         pip install https://github.com/modflowpy/flopy/zipball/develop
-        pip install https://github.com/modflowpy/pymake/zipball/master
+#        pip install https://github.com/modflowpy/pymake/zipball/master
+        pip install https://github.com/jdhughes-usgs/pymake/zipball/linux-intel-option
 
     - name: Clone MODFLOW 6 repo
       run: |
@@ -271,7 +272,7 @@ jobs:
       uses: 1466587594/get-current-time@v2
       id: current-time
       with:
-        format: MM-DD-YYYY
+        format: YYYYMMDD
 
     - name: Use current time
       env:
@@ -282,7 +283,7 @@ jobs:
     - name: Create a Release
       uses: ncipollo/release-action@v1.8.0
       with:
-        tag: "nightly-build"
+        tag: ${{ steps.current-time.outputs.formattedTime }}
         name: ${{ steps.current-time.outputs.formattedTime }} nightly build
         body: "OneAPI version of Intel ifort compiler used to compile executables for all operating systems."
         draft: false
@@ -294,7 +295,7 @@ jobs:
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: ./nightly/*
-        tag: "nightly-build"
+        tag: ${{ steps.current-time.outputs.formattedTime }}
         overwrite: true
         file_glob: true
 
