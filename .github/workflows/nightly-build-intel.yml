@@ -254,6 +254,9 @@ jobs:
     needs: build_for_os
     runs-on: ubuntu-20.04
 
+    if:
+      github.event_name == 'push' || github.event_name == 'schedule'
+
     steps:
     - name: Download a Build Artifact
       uses: actions/download-artifact@v2
