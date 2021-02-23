@@ -115,6 +115,12 @@ jobs:
         cd ./modflow6/
         nosetests -v -w ./distribution build_nightly.py
         cd ../
+
+#
+#    Uncomment the code below in the event that the oneAPI approach
+#    needs to be abandoned and we need to return to building MODFLOW 6defaults:
+#    executables with gfortran
+#    jdh - 2/22/2021
 #
 #    - name: Move the build zip file
 #      shell: bash
