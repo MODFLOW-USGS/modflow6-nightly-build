@@ -15,6 +15,10 @@ Release tags are based on the date (YYYYMMDD) the MODFLOW 6 codes were compiled 
 
 It may be necessary to have gfortran installed locally in order to use the compiled MODFLOW 6 executables, dynamic-linked libraries, and shared objects available in the operating specific release assets associated with the latest and previous release candidates. Additional information on the version of gfortran used to compile the MODFLOW 6 executables, dynamic-linked libraries, and shared objects is provided with each release.
 
+Nightly Build Issues
+--------------------
+
+Any issues with the nightly build should be posted on the main [MODFLOW 6 GitHub repo](https://github.com/MODFLOW-USGS/modflow6) and flagged with the [nightly build](https://github.com/MODFLOW-USGS/modflow6/labels/nightly%20build) label.
 
 
 Disclaimer
