@@ -255,6 +255,14 @@ jobs:
       github.event_name == 'push' || github.event_name == 'schedule'
 
     steps:
+    - name: Delete Older Releases
+      uses: dev-drprasad/delete-older-releases@v0.2.0
+      with:
+        keep_latest: 30
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Download a Build Artifact
       uses: actions/download-artifact@v2
       with:
