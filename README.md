@@ -13,6 +13,7 @@ Each release also includes a copy of the *'MODFLOW 6 – Description of Input an
 
 Release tags are based on the date (YYYYMMDD) the MODFLOW 6 codes were compiled and the release was made. Previous nightly build releases are retained for 30 days in the event that there are issues with the latest release candidate. 
 
+
 Nightly Build Issues
 --------------------
 

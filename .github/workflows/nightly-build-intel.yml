@@ -146,7 +146,7 @@ jobs:
         print("pymake is installed in: {}".format(pymakepth))
 
     - name: Build and zip applications on linux and MacOS
-      if: runner.os == 'Linux'
+      if: runner.os == 'Linux' || runner.os == 'macOS'
       run: |
         source /opt/intel/oneapi/setvars.sh
         cd ./modflow6/distribution/
