@@ -118,7 +118,7 @@ jobs:
 
 #
 #    Uncomment the code below in the event that the oneAPI approach
-#    needs to be abandoned and we need to return to building MODFLOW 6defaults:
+#    needs to be abandoned and we need to return to building MODFLOW 6
 #    executables with gfortran
 #    jdh - 2/22/2021
 #

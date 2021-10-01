@@ -39,9 +39,9 @@ jobs:
         shell: bash
 
     env:
-      WINDOWS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/17392/w_HPCKit_p_2021.1.0.2682_offline.exe
-      LINUX_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/17427/l_HPCKit_p_2021.1.0.2684_offline.sh
-      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/17398/m_HPCKit_p_2021.1.0.2681_offline.dmg
+      WINDOWS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18247/w_HPCKit_p_2021.4.0.3340_offline.exe
+      LINUX_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18211/l_HPCKit_p_2021.4.0.3347_offline.sh
+      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18242/m_HPCKit_p_2021.4.0.3389_offline.dmg
       WINDOWS_FORTRAN_COMPONENTS: intel.oneapi.win.ifort-compiler
       LINUX_FORTRAN_COMPONENTS_WEB: intel.oneapi.lin.ifort-compiler
       MACOS_FORTRAN_COMPONENTS: intel.oneapi.mac.ifort-compiler
@@ -56,7 +56,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: |
-          /opt/intel/oneapi/compiler
+          /opt/intel/oneapi
         key: install-${{ env.LINUX_HPCKIT_URL }}-${{ env.LINUX_FORTRAN_COMPONENTS_WEB }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_linux.sh') }}
 
     - name: install ifort on linux
@@ -82,7 +82,7 @@ jobs:
       id: cache-install-windows
       uses: actions/cache@v2
       with:
-        path: C:\Program Files (x86)\Intel\oneAPI\compiler
+        path: C:\Program Files (x86)\Intel\oneAPI
         key: install-${{ env.WINDOWS_HPCKIT_URL }}-${{ env.WINDOWS_FORTRAN_COMPONENTS }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_windows.sh') }}
 
     - name: install ifort on windows
@@ -145,20 +145,19 @@ jobs:
         print("flopy is installed in:  {}".format(flopypth))
         print("pymake is installed in: {}".format(pymakepth))
 
-    - name: Build and zip applications on linux
-      if: runner.os == 'Linux'
+    - name: Build and zip applications on linux and MacOS
+      if: runner.os == 'Linux' || runner.os == 'macOS'
       run: |
-        .github/intel-scripts/ifortvars_linux.sh
+        source /opt/intel/oneapi/setvars.sh
+        cd ./modflow6/distribution/
+        python build_nightly.py -fc ifort
+        cd ../../
 
-    - name: Build and zip applications on macos
-      if: runner.os == 'macOS'
-      run: |
-        .github/intel-scripts/ifortvars_macos.sh
-
-    - name: Build and zip applications on windows
+    - name: Build and zip applications on Windows
       if: runner.os == 'Windows'
+      shell: cmd
       run: |
-        .github/intel-scripts/ifortvars_windows.bat
+        call ".github/intel-scripts/ifortvars_windows.bat"
 
     - name: Move the build zip file
       run: |
@@ -256,6 +255,14 @@ jobs:
       github.event_name == 'push' || github.event_name == 'schedule'
 
     steps:
+    - name: Delete Older Releases
+      uses: dev-drprasad/delete-older-releases@v0.2.0
+      with:
+        keep_latest: 30
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Download a Build Artifact
       uses: actions/download-artifact@v2
       with:
