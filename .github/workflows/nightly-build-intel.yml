@@ -39,9 +39,9 @@ jobs:
         shell: bash
 
     env:
-      WINDOWS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18247/w_HPCKit_p_2021.4.0.3340_offline.exe
-      LINUX_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18211/l_HPCKit_p_2021.4.0.3347_offline.sh
-      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18242/m_HPCKit_p_2021.4.0.3389_offline.dmg
+      WINDOWS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18417/w_HPCKit_p_2022.1.0.93_offline.exe
+      LINUX_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18438/l_HPCKit_p_2022.1.1.97_offline.sh
+      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18341/m_HPCKit_p_2022.1.0.86_offline.dmg
       WINDOWS_FORTRAN_COMPONENTS: intel.oneapi.win.ifort-compiler
       LINUX_FORTRAN_COMPONENTS_WEB: intel.oneapi.lin.ifort-compiler
       MACOS_FORTRAN_COMPONENTS: intel.oneapi.mac.ifort-compiler
@@ -98,7 +98,7 @@ jobs:
     - name: Install python packages
       run: |
         conda info
-        conda install pip requests appdirs nose
+        conda install pip requests appdirs nose wheel
         # use pip to install numpy and matplotlib because of a windows issue
         pip install numpy matplotlib
         pip install https://github.com/modflowpy/flopy/zipball/develop
@@ -180,6 +180,17 @@ jobs:
       run: |
         sudo apt install texlive-latex-extra texlive-science
 
+    - name: Clone USGS LaTeX repo
+      if: runner.os == 'Linux'
+      run: |
+        git clone https://github.com/MODFLOW-USGS/usgslatex.git usgslatex
+
+    - name: Install USGS LaTeX style files and Univers font
+      if: runner.os == 'Linux'
+      working-directory: ./usgslatex/usgsLaTeX
+      run: |
+        sudo ./install.sh --all-users
+
     - name: Build mf6io latex document
       if: runner.os == 'Linux'
       shell: python
@@ -188,7 +199,7 @@ jobs:
         import subprocess
 
         ws = "./modflow6/doc/mf6io/"
-        bibnam = "mf6io.nightlybuild"
+        bibnam = "mf6io"
         texnam = bibnam + ".tex"
         cmds = [
                 ["pdflatex", texnam],
@@ -211,12 +222,12 @@ jobs:
                     stderr = stderr.decode()
                     print(stderr)
 
-    - name: Rename and move the LaTeX document
+    - name: Move the LaTeX document
       if: runner.os == 'Linux'
       shell: bash
       run: |
         ls -la ./modflow6/doc/mf6io/
-        mv ./modflow6/doc/mf6io/mf6io.nightlybuild.pdf mf6io.pdf
+        mv ./modflow6/doc/mf6io/mf6io.pdf mf6io.pdf
         ls -la ./
 
     - name: Upload a Build Artifact
