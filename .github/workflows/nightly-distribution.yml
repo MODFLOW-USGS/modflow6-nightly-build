@@ -1,0 +1,181 @@
+# Parts of configuration file are based on the examples in this repository:
+# https://github.com/oneapi-src/oneapi-ci
+#
+# Which have the following copyright:
+# SPDX-FileCopyrightText: 2020 Intel Corporation
+#
+# SPDX-License-Identifier: MIT
+
+name: MODFLOW 6 distribution (nightly build with Intel)
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # run at 2 AM UTC
+    # - cron: '*/10 * * * *' # run every 10 minutes
+    # - cron: '20 */1 * * *' # run every hour at 20 minutes past the hour
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build_for_os:
+    name: build distribution
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-20.04
+            artifact_name: Linux.zip
+          - os: macos-latest
+            artifact_name: macOS.zip
+          - os: windows-2019
+            artifact_name: Windows.zip
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      WINDOWS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18417/w_HPCKit_p_2022.1.0.93_offline.exe
+      LINUX_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18438/l_HPCKit_p_2022.1.1.97_offline.sh
+      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18341/m_HPCKit_p_2022.1.0.86_offline.dmg
+      WINDOWS_FORTRAN_COMPONENTS: intel.oneapi.win.ifort-compiler
+      LINUX_FORTRAN_COMPONENTS_WEB: intel.oneapi.lin.ifort-compiler
+      MACOS_FORTRAN_COMPONENTS: intel.oneapi.mac.ifort-compiler
+      FC: ifort
+
+    steps:
+    - name: Checkout this github repo
+      uses: actions/checkout@v2.3.4
+
+    - name: cache install ifort on linux
+      if: runner.os == 'Linux'
+      id: cache-install-linux
+      uses: actions/cache@v2
+      with:
+        path: |
+          /opt/intel/oneapi
+        key: install-${{ env.LINUX_HPCKIT_URL }}-${{ env.LINUX_FORTRAN_COMPONENTS_WEB }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_linux.sh') }}
+
+    - name: install ifort on linux
+      if: runner.os == 'Linux' && steps.cache-install-linux.outputs.cache-hit != 'true'
+      run: |
+        .github/intel-scripts/install_linux.sh $LINUX_HPCKIT_URL $LINUX_FORTRAN_COMPONENTS_WEB
+
+    - name: cache install ifort on macos
+      if: runner.os == 'macOS'
+      id: cache-install-macos
+      uses: actions/cache@v2
+      with:
+        path: /opt/intel/oneapi
+        key: install-${{ env.MACOS_HPCKIT_URL }}-${{ env.MACOS_FORTRAN_COMPONENTS }}
+
+    - name: install ifort on macos
+      if: runner.os == 'macOS' && steps.cache-install-macos.outputs.cache-hit != 'true'
+      run: |
+        .github/intel-scripts/install_macos.sh $MACOS_HPCKIT_URL $MACOS_FORTRAN_COMPONENTS
+
+    - name: cache install ifort on windows
+      if: runner.os == 'Windows'
+      id: cache-install-windows
+      uses: actions/cache@v2
+      with:
+        path: C:\Program Files (x86)\Intel\oneAPI
+        key: install-${{ env.WINDOWS_HPCKIT_URL }}-${{ env.WINDOWS_FORTRAN_COMPONENTS }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_windows.sh') }}
+
+    - name: install ifort on windows
+      if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
+      run: |
+        .github/intel-scripts/install_windows.bat $WINDOWS_HPCKIT_URL $WINDOWS_FORTRAN_COMPONENTS
+    - name: setup-conda
+      uses: s-weigand/setup-conda@v1.0.5
+      with:
+        update-conda: true
+
+    - name: install dos2unix on linux
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get install dos2unix
+        dos2unix --version
+
+    - name: Install TeX Live and usgslatex
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt install texlive-latex-extra texlive-science texlive-fonts-extra
+        git clone https://github.com/MODFLOW-USGS/usgslatex.git usgslatex
+        cd ./usgslatex/usgsLaTeX
+        sudo ./install.sh --all-users
+
+    - name: Clone MODFLOW 6 repos
+      run: |
+        git clone --depth 1 https://github.com/MODFLOW-USGS/modflow6.git modflow6
+        git clone --depth 1 https://github.com/MODFLOW-USGS/modflow6-examples.git modflow6-examples
+
+    - name: Install python packages
+      run: |
+        conda info
+        conda install pip requests appdirs nose wheel
+        pip install -r ./etc/requirements.pip.txt
+        pip install -r ./etc/requirements.usgs.txt
+        pip install meson ninja
+
+    - name: Determine MODFLOW 6 branch
+      run: |
+        pwd
+        cd ./modflow6/
+        pwd
+        git branch
+        cd ../
+        pwd
+        ls ./
+
+    - name: Print python package versions
+      shell: python
+      run: |
+        import sys
+        import nose
+        import numpy as np
+        import matplotlib as mpl
+        import flopy
+        import pymake
+        flopypth = flopy.__path__[0]
+        pymakepth = pymake.__path__[0]
+        print("python version:     {}".format(sys.version))
+        print("nosetest version:   {}".format(nose.__version__))
+        print("numpy version:      {}".format(np.__version__))
+        print("matplotlib version: {}".format(mpl.__version__))
+        print("flopy version:      {}".format(flopy.__version__))
+        print("pymake version:     {}".format(pymake.__version__))
+        print("")
+        print("flopy is installed in:  {}".format(flopypth))
+        print("pymake is installed in: {}".format(pymakepth))
+
+    - name: Update flopy MODFLOW 6 classes
+      run: |
+        cd ./modflow6/autotest
+        python update_flopy.py
+        cd ../../
+
+    - name: Create MODFLOW 6 distribution (Linux/Mac)
+      if: runner.os == 'Linux' || runner.os == 'macOS'
+      run: |
+        source /opt/intel/oneapi/setvars.sh
+        python make_distribution.py -mf6p ./modflow6 -mf6ep ./modflow6-examples -dp ./${{ runner.os }}
+
+    - name: Create MODFLOW 6 distribution (Windows)
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        call ".github/intel-scripts/ifortvars_windows.bat"
+        python make_distribution.py -mf6p ./modflow6 -mf6ep ./modflow6-examples -dp ./${{ runner.os }}
+
+    - name: Create an artificat of the distributions
+      uses: actions/upload-artifact@v2.2.3
+      with:
+        name: ${{ runner.os }}
+        path: |
+          ./${{ runner.os }}.zip
