@@ -158,6 +158,9 @@ jobs:
       shell: cmd
       run: |
         call ".github/intel-scripts/ifortvars_windows.bat"
+        cd ./modflow6/distribution/
+        python build_nightly.py -fc ifort
+        cd ../../
 
     - name: Move the build zip file
       run: |
