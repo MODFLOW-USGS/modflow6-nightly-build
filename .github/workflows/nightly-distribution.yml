@@ -15,10 +15,10 @@ on:
     # - cron: '20 */1 * * *' # run every hour at 20 minutes past the hour
   push:
     branches:
-      - main
+      - master
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:
   build_for_os:
