@@ -624,7 +624,10 @@ def build_latex(modflow6_path, modflow6_examples_path, distribution_path):
 
         # set paths
         temp_path = "./temp"
-        mf6bin_path = os.path.join(distribution_path, "bin", "mf6")
+        ext = ""
+        if get_platform() == "windows":
+            ext = ".exe"
+        mf6bin_path = os.path.join(distribution_path, "bin", f"mf6{ext}")
 
         # build files needed for latex docs
         clean_latex_files(modflow6_path)
