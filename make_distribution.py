@@ -556,7 +556,7 @@ def build_latex_docs(modflow6_path, modflow6_examples_path, distribution_path):
         (modflow6_doc_path, "zonebudget", "zonebudget"),
         (modflow6_doc_path, "ConverterGuide", "converter_mf5to6"),
         (modflow6_doc_path, "SuppTechInfo", "mf6suptechinfo"),
-        #(modflow6_examples_path, "doc", "mf6examples),
+        (modflow6_examples_path, "doc", "mf6examples"),
     ]
 
     for p, d, t in doclist:
@@ -619,8 +619,15 @@ def build_latex_docs(modflow6_path, modflow6_examples_path, distribution_path):
     return
 
 
+def latex_is_available():
+    if shutil.which("pdflatex") is None:
+        return False
+    else:
+        return True
+
+
 def build_latex(modflow6_path, modflow6_examples_path, distribution_path):
-    if shutil.which("pdflatex") is not None:
+    if latex_is_available():
 
         # set paths
         temp_path = "./temp"
@@ -796,6 +803,33 @@ def build_example_run_scripts_linux(distribution_path):
     return
 
 
+def build_and_run_examples(modflow6_examples_path, distribution_path):
+    if latex_is_available():
+        print("Building and running examples so that mf6examples.pdf can be built with LaTex.")
+
+        bin_pth = os.path.join(modflow6_examples_path, "bin")
+        print(f"Using pymake to download binary executables into {bin_pth}.")
+        if not os.path.isdir(bin_pth):
+            os.makedirs(bin_pth)
+        pymake.getmfexes(pth=bin_pth, verbose=True)
+
+        # copy the distribution binaries into modflow6examples/bin
+        print("Copying binaries from distribution into modflow6examples/bin.")
+        copy_binaries(distribution_path, modflow6_examples_path)
+
+        print("Running modflow6examples.")
+        # run modflow6examples/etc/ci_build_files.py -r to build and run examples
+        run_command(["python", "ci_build_files.py", "-r"], os.path.join(modflow6_examples_path, "etc"))
+
+        # run process-scripts.py in modflow6examples/scripts
+        print("Running the process-scripts.py command.")
+        run_command(["python", "process-scripts.py"], os.path.join(modflow6_examples_path, "scripts"))
+        # at this point, the build_latex() script can make mf6examples.pdf
+    else:
+        print("Skipping building and running of examples because latex is not available.")
+    return
+
+
 def zipdir(dirname, zipname):
     print("Zipping directory: {}".format(dirname))
     zipf = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
@@ -820,6 +854,7 @@ if __name__ == "__main__":
     #     -mf6ep <mf6 examples repo path>
     #   examples:
     #     python make_distribution.py -dp ./mf6.3.0win -mf6p ../modflow6-fork.git -mf6ep ../modflow6-examples.git
+    #     python make_distribution.py -dp ./distribution/mf6dev -mf6p ../modflow6-fork.git -mf6ep ../modflow6-examples.git
     #     python -c "import make_distribution; make_distribution.build_example_run_scripts_linux('./distribution/mf6dev')"
 
     # set paths
@@ -827,41 +862,44 @@ if __name__ == "__main__":
     modflow6_examples_path = get_modflow6_examples_path()
     distribution_path = get_distribution_path()
 
-    if True:
+    do_step = True
+
+    if do_step:
         set_modflow6_release_info(modflow6_path)
 
-    if True:
+    if do_step:
         initialize_new_distribution(modflow6_path, distribution_path)
 
-    if True:
+    if do_step:
         copy_visual_studio_files(modflow6_path, distribution_path, windows_only=True)
 
-    if True:
+    if do_step:
         build_makefile(distribution_path)
 
-    if True:
+    if do_step:
         meson_build_binaries(modflow6_path)
         copy_binaries(modflow6_path, distribution_path)
 
-    if True:
+    if do_step:
         build_utility(modflow6_path, distribution_path, "zonebudget", "zbud6")
         build_utility(modflow6_path, distribution_path, "mf5to6")
 
-    if True:
+    if do_step:
         build_examples(modflow6_examples_path, distribution_path)
         build_example_run_scripts_win(distribution_path)
         build_example_run_scripts_linux(distribution_path)
 
-    if True:
+    if do_step:
+        build_and_run_examples(modflow6_examples_path, distribution_path)
+
+    if do_step:
         # todo: mk_runtimecomp.py
         build_latex(modflow6_path, modflow6_examples_path, distribution_path)
 
-    if True:
+    if do_step:
         download_published_reports(distribution_path)
 
-    # todo: convert line endings
-
-    if True:
+    if do_step:
         zipname = distribution_path
         zipname += ".zip"
         zipdir(distribution_path, zipname)
