@@ -105,7 +105,8 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
-        sudo apt install texlive-latex-extra texlive-science texlive-fonts-extra texlive-font-utils
+        sudo apt install texlive-latex-extra texlive-science texlive-font-utils
+        sudo apt install texlive-fonts-extra
         git clone https://github.com/MODFLOW-USGS/usgslatex.git usgslatex
         cd ./usgslatex/usgsLaTeX
         sudo ./install.sh --all-users
