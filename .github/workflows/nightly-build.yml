@@ -187,7 +187,7 @@ jobs:
 #      if: runner.os == 'Linux'
 #      shell: bash
 #      run: |
-#        sudo apt install texlive-latex-extra texlive-science
+#        sudo apt install texlive-latex-extra texlive-science texlive-fonts-extra texlive-font-utils
 #
 #    - name: Build mf6io latex document
 #      if: runner.os == 'Linux'
