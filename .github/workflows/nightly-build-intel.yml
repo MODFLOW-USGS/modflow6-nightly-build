@@ -182,7 +182,7 @@ jobs:
       shell: bash
       run: |
         sudo apt-get update
-        sudo apt install texlive-latex-extra texlive-science texlive-latex-extra
+        sudo apt install texlive-latex-extra texlive-science texlive-fonts-extra texlive-font-utils
 
     - name: Clone USGS LaTeX repo
       if: runner.os == 'Linux'
