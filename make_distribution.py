@@ -109,7 +109,9 @@ def delete_files(files, pth, allow_failure=False):
     return True
 
 
-def run_command(argv, pth, timeout=None):
+def run_command(argv, pth, timeout=None, verbose=True, terminate_on_failure=False):
+    if verbose:
+        print(f"Running system command ({' '.join(argv)}) in directory: {pth}")
     with subprocess.Popen(
         argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=pth
     ) as process:
@@ -126,6 +128,12 @@ def run_command(argv, pth, timeout=None):
             output, unused_err = process.communicate()
             buff = output.decode("utf-8")
             ierr = 101
+    if terminate_on_failure:
+        if ierr != 0:
+            if verbose:
+                print(f"Failed to execute system command {argv}")
+                print(buff)
+            raise Exception(f"Failed to execute system command {argv}")
 
     return buff, ierr
 
@@ -151,9 +159,7 @@ def set_modflow6_release_info(modflow6_path):
         cmd.append(developMode)
 
     pth = os.path.join(modflow6_path, "distribution")
-    buff, ierr = run_command(cmd, pth)
-    msg = "\nERROR {}: could not run {} on {}".format(ierr, cmd[0], cmd[1])
-    assert ierr == 0, buff + msg
+    buff, ierr = run_command(cmd, pth, verbose=True, terminate_on_failure=True)
 
     return
 
@@ -165,21 +171,11 @@ def meson_build_binaries(modflow6_dir, verbose=True):
     cmd_list = ["meson", "setup", "builddir", f"--prefix={abspath_modflow6_dir}", "--libdir=bin"]
 
     # use meson to setup the build system
-    if verbose:
-        print(f"Running command to set up meson build system {cmd_list}")
-    buff, ierr = run_command(cmd_list, modflow6_dir)
-    if ierr != 0:
-        errmsg = f"Running command {cmd_list} returned error code {ierr}\n {buff}"
-        raise Exception(errmsg)
+    buff, ierr = run_command(cmd_list, modflow6_dir, verbose=True, terminate_on_failure=True)
 
     # run the meson build
-    if verbose:
-        print(f"Running command to build using meson {cmd_list}")
     cmd_list = ["meson", "install", "-C", "builddir"]
-    buff, ierr = run_command(cmd_list, modflow6_dir)
-    if ierr != 0:
-        errmsg = f"Running command {cmd_list} returned error code {ierr}\n {buff}"
-        raise Exception(errmsg)
+    buff, ierr = run_command(cmd_list, modflow6_dir, verbose=True, terminate_on_failure=True)
 
     return
 
@@ -402,11 +398,7 @@ def rebuild_tex_from_dfn(modflow6_path):
 
         # run python
         argv = ["python", "mf6ivar.py"]
-        buff, ierr = run_command(argv, pth)
-        msg = "\nERROR {}: could not run {} with {}".format(
-            ierr, argv[0], argv[1]
-        )
-        assert ierr == 0, buff + msg
+        buff, ierr = run_command(argv, pth, verbose=True, terminate_on_failure=True)
 
         # get list for dfn files
         dfnfiles = [
@@ -480,7 +472,7 @@ def update_mf6io_tex_files(modflow6_path, mf6bin_path, expth):
     print(f"Running simple test model with {abs_mf6bin_path}.")
     cmd = [abs_mf6bin_path]
     simpth = expth
-    buff, ierr = run_command(cmd, simpth)
+    buff, ierr = run_command(cmd, simpth, verbose=False, terminate_on_failure=True)
     lines = buff.split("\r\n")
     with open(fname1, "w") as f:
         f.write("{}\n".format("{\\small"))
@@ -496,7 +488,7 @@ def update_mf6io_tex_files(modflow6_path, mf6bin_path, expth):
         shutil.rmtree("./temp")
     os.mkdir("./temp")
     cmd = [abs_mf6bin_path]
-    buff, ierr = run_command(cmd, "./temp")
+    buff, ierr = run_command(cmd, "./temp", verbose=False, terminate_on_failure=False)
     lines = buff.split("\r\n")
     with open(fname2, "w") as f:
         f.write("{}\n".format("{\\small"))
@@ -509,7 +501,7 @@ def update_mf6io_tex_files(modflow6_path, mf6bin_path, expth):
     # run mf6 command with -h to show help
     print(f"Running mf6 with -h option to give help commands.")
     cmd = [abs_mf6bin_path, "-h"]
-    buff, ierr = run_command(cmd, "./temp")
+    buff, ierr = run_command(cmd, "./temp", verbose=False, terminate_on_failure=True)
     lines = buff.split("\r\n")
     with open(fname3, "w") as f:
         f.write("{}\n".format("{\\small"))
@@ -530,9 +522,7 @@ def update_latex_releaseinfo(modflow6_path, distribution_path):
 
     abs_dp = os.path.abspath(distribution_path)
     cmd = ["python", "mk_folder_struct.py", "-dp", abs_dp]
-    buff, ierr = run_command(cmd, pth)
-    msg = "\nERROR {}: could not run {} on {}".format(ierr, cmd[0], cmd[1])
-    assert ierr == 0, buff + msg
+    buff, ierr = run_command(cmd, pth, verbose=True, terminate_on_failure=True)
 
     #cmd = ["python", "mk_runtimecomp.py"]
     #buff, ierr = run_command(cmd, pth)
@@ -573,15 +563,11 @@ def build_latex_docs(modflow6_path, modflow6_examples_path, distribution_path):
 
             print("  Pass 1/4...")
             cmd = pdflatexcmd
-            buff, ierr = run_command(cmd, "./")
-            msg = "\nERROR {}: could not run {} on {}".format(
-                ierr, cmd[0], cmd[1]
-            )
-            assert ierr == 0, buff + msg
+            buff, ierr = run_command(cmd, "./", verbose=True, terminate_on_failure=True)
 
             cmd = ["bibtex", os.path.splitext(t)[0] + ".aux"]
             print("  Pass 2/4...")
-            buff, ierr = run_command(cmd, "./")
+            buff, ierr = run_command(cmd, "./", verbose=True, terminate_on_failure=False)
             msg = "\nERROR {}: could not run {} on {}".format(
                 ierr, cmd[0], cmd[1]
             )
@@ -592,19 +578,11 @@ def build_latex_docs(modflow6_path, modflow6_examples_path, distribution_path):
 
             print("  Pass 3/4...")
             cmd = pdflatexcmd
-            buff, ierr = run_command(cmd, "./")
-            msg = "\nERROR {}: could not run {} on {}".format(
-                ierr, cmd[0], cmd[1]
-            )
-            assert ierr == 0, buff + msg
+            buff, ierr = run_command(cmd, "./", verbose=True, terminate_on_failure=True)
 
             print("  Pass 4/4...")
             cmd = pdflatexcmd
-            buff, ierr = run_command(cmd, "./")
-            msg = "\nERROR {}: could not run {} on {}".format(
-                ierr, cmd[0], cmd[1]
-            )
-            assert ierr == 0, buff + msg
+            buff, ierr = run_command(cmd, "./", verbose=True, terminate_on_failure=True)
 
             fname = f"{t}.pdf"
             assert os.path.isfile(fname), "Could not find " + fname
@@ -684,12 +662,7 @@ def build_examples(modflow6_examples_path, distribution_path):
             "--destination",
             dest,
         ]  # no run no plot
-        print(f"running {argv} in {scripts_folder}")
-        buff, ierr = run_command(argv, scripts_folder)
-        if ierr != 0:
-            print("Example could not be created.")
-            print(buff)
-            raise Exception(f"Script {script} terminated with error code {ierr}")
+        buff, ierr = run_command(argv, scripts_folder, verbose=True, terminate_on_failure=True)
 
     return
 
@@ -819,27 +792,17 @@ def build_and_run_examples(modflow6_examples_path, distribution_path):
 
         print("Running modflow6examples.")
         # run modflow6examples/etc/ci_build_files.py -r to build and run examples
-        #run_command(["python", "ci_build_files.py", "-r"], os.path.join(modflow6_examples_path, "etc"))
         script_path = os.path.join(modflow6_examples_path, "scripts")
         scripts = [file_name for file_name in sorted(os.listdir(script_path)) if
                    file_name.endswith(".py") and file_name.startswith("ex-")]
         for s in scripts:
             args = ["python", s]
-            print(f"Running script {s}")
-            buff, ierr = run_command(args, pth=script_path)
-            if ierr != 0:
-                print("Example could not be created and run.")
-                print(buff)
-                raise Exception(f"Script {s} terminated with error code {ierr}")
+            buff, ierr = run_command(args, pth=script_path, verbose=True, terminate_on_failure=True)
 
         # run process-scripts.py in modflow6examples/scripts.  Once completed, the build_latex()
         # script can make mf6examples.pdf
         print("Running the process-scripts.py command.")
-        buff, ierr = run_command(["python", "process-scripts.py"], script_path)
-        if ierr != 0:
-            print("process-scripts.py did not run successfully.")
-            print(buff)
-            raise Exception(f"process-scripts.py terminated with error code {ierr}")
+        buff, ierr = run_command(["python", "process-scripts.py"], script_path, verbose=True, terminate_on_failure=True)
     else:
         print("Skipping building and running of examples because latex is not available.")
     return
