@@ -811,7 +811,7 @@ def build_and_run_examples(modflow6_examples_path, distribution_path):
         print(f"Using pymake to download binary executables into {bin_pth}.")
         if not os.path.isdir(bin_pth):
             os.makedirs(bin_pth)
-        pymake.getmfexes(pth=bin_pth, verbose=True)
+        pymake.getmfexes(pth=bin_pth, verbose=True, verify=False)
 
         # copy the distribution binaries into modflow6examples/bin
         print("Copying binaries from distribution into modflow6examples/bin.")
@@ -819,12 +819,27 @@ def build_and_run_examples(modflow6_examples_path, distribution_path):
 
         print("Running modflow6examples.")
         # run modflow6examples/etc/ci_build_files.py -r to build and run examples
-        run_command(["python", "ci_build_files.py", "-r"], os.path.join(modflow6_examples_path, "etc"))
+        #run_command(["python", "ci_build_files.py", "-r"], os.path.join(modflow6_examples_path, "etc"))
+        script_path = os.path.join(modflow6_examples_path, "scripts")
+        scripts = [file_name for file_name in sorted(os.listdir(script_path)) if
+                   file_name.endswith(".py") and file_name.startswith("ex-")]
+        for s in scripts:
+            args = ["python", s]
+            print(f"Running script {s}")
+            buff, ierr = run_command(args, pth=script_path)
+            if ierr != 0:
+                print("Example could not be created and run.")
+                print(buff)
+                raise Exception(f"Script {s} terminated with error code {ierr}")
 
-        # run process-scripts.py in modflow6examples/scripts
+        # run process-scripts.py in modflow6examples/scripts.  Once completed, the build_latex()
+        # script can make mf6examples.pdf
         print("Running the process-scripts.py command.")
-        run_command(["python", "process-scripts.py"], os.path.join(modflow6_examples_path, "scripts"))
-        # at this point, the build_latex() script can make mf6examples.pdf
+        buff, ierr = run_command(["python", "process-scripts.py"], script_path)
+        if ierr != 0:
+            print("process-scripts.py did not run successfully.")
+            print(buff)
+            raise Exception(f"process-scripts.py terminated with error code {ierr}")
     else:
         print("Skipping building and running of examples because latex is not available.")
     return
