@@ -1,5 +1,8 @@
 # MODFLOW 6 development version of binary executables
 
+[![MODFLOW 6 intel nightly build](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-build-intel.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-build-intel.yml)
+[![MODFLOW 6 distribution (nightly build with Intel)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-distribution.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-distribution.yml)
+
 The develop branch of the [MODFLOW 6 repository](https://github.com/MODFLOW-USGS/modflow6) contains bug fixes and new functionality that may be incorporated into the next [approved MODFLOW 6 release](https://www.usgs.gov/software/modflow-6-usgs-modular-hydrologic-model). Each night, at 2 AM UTC, Fortran source code from the development branch is compiled for Windows, MacOS, and Ubuntu 18.04.4 LTS using gfortran. The binary executables released [here](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest) represent release candidates for the next approved version of MODFLOW 6 but are considered preliminary or provisional.
 
 The compiled codes for the latest nightly build are available as operating specific [release assets](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest) (`win64.zip`, `mac.zip`, and `linux.zip`). Each operating specific release asset includes: 
