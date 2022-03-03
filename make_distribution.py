@@ -138,14 +138,22 @@ def run_command(argv, pth, timeout=None, verbose=True, terminate_on_failure=Fals
     return buff, ierr
 
 
+def get_is_approved(is_approved):
+    for idx, arg in enumerate(sys.argv):
+        if arg == "--isApproved":
+            is_approved = True
+    return is_approved
+
+
 def set_modflow6_release_info(modflow6_path):
 
     print(f"Setting the release information for {modflow6_path}")
 
     isApproved = None
+    isApproved = get_is_approved(isApproved)
     version = None
     releaseCandidate = None
-    developMode = "0"
+    developMode = None
 
     cmd = ["python", "make_release.py"]
     if isApproved is not None:
