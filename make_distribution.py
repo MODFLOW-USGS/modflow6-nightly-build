@@ -27,6 +27,18 @@ def cwd(path):
         os.chdir(oldpwd)
 
 
+def paths_for_filename(filename, pth):
+    # file occurences of filename in pth and return as list
+    # relative to pth
+    result = []
+    for root, dirs, files in os.walk(pth, topdown=False):
+        files = [f for f in files if f == filename]
+        for name in files:
+            rpath = os.path.relpath(root, start=pth)
+            result.append(os.path.join(rpath, name))
+    return result
+
+
 def get_distribution_path(distribution_path=None):
 
     # set to default if not passed in
@@ -232,10 +244,9 @@ def initialize_new_distribution(modflow6_path, distribution_path):
         #"src",
         #"srcbmi",
         "make",
+        "msvs",
         "utils",
     ]
-    if "windows" in get_platform():
-        subdirs.append("msvs")
 
     for sd in subdirs:
         d = os.path.join(distribution_path, sd)
@@ -245,11 +256,7 @@ def initialize_new_distribution(modflow6_path, distribution_path):
     return
 
 
-def copy_visual_studio_files(modflow6_path, distribution_path, windows_only=True):
-
-    if windows_only:
-        if get_platform() != "windows":
-            return
+def copy_visual_studio_files(modflow6_path, distribution_path):
 
     # Copy the Visual Studio solution and project files
     flist = [
@@ -818,6 +825,17 @@ def build_and_run_examples(modflow6_examples_path, distribution_path):
     return
 
 
+def copy_meson_files(modflow6_path, distribution_path):
+    meson_files = paths_for_filename("meson.build", modflow6_path)
+    for meson_file in meson_files:
+        src = os.path.join(modflow6_path, meson_file)
+        dst = os.path.join(distribution_path, meson_file)
+        if not os.path.exists(dst):
+            print(f"Copying {src} ===> {dst}")
+            shutil.copy(src, dst)
+    return
+
+
 def zipdir(dirname, zipname):
     print("Zipping directory: {}".format(dirname))
     zipf = zipfile.ZipFile(zipname, "w", zipfile.ZIP_DEFLATED)
@@ -841,7 +859,7 @@ if __name__ == "__main__":
     #     -mf6p <mf6 repository path>
     #     -mf6ep <mf6 examples repo path>
     #   examples:
-    #     python make_distribution.py -dp ./mf6.3.0win -mf6p ../modflow6-fork.git -mf6ep ../modflow6-examples.git
+    #     python make_distribution.py -dp ./mf6.3.0 -mf6p ../modflow6-fork.git -mf6ep ../modflow6-examples.git --isApproved
     #     python make_distribution.py -dp ./distribution/mf6dev -mf6p ../modflow6-fork.git -mf6ep ../modflow6-examples.git
     #     python -c "import make_distribution; make_distribution.build_example_run_scripts_linux('./distribution/mf6dev')"
 
@@ -859,7 +877,7 @@ if __name__ == "__main__":
         initialize_new_distribution(modflow6_path, distribution_path)
 
     if do_step:
-        copy_visual_studio_files(modflow6_path, distribution_path, windows_only=True)
+        copy_visual_studio_files(modflow6_path, distribution_path)
 
     if do_step:
         build_makefile(distribution_path)
@@ -871,6 +889,9 @@ if __name__ == "__main__":
     if do_step:
         build_utility(modflow6_path, distribution_path, "zonebudget", "zbud6")
         build_utility(modflow6_path, distribution_path, "mf5to6")
+
+    if do_step:
+        copy_meson_files(modflow6_path, distribution_path)
 
     if do_step:
         build_examples(modflow6_examples_path, distribution_path)
