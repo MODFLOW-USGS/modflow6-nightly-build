@@ -334,6 +334,8 @@ def download_published_reports(distribution_path):
         "https://pubs.usgs.gov/tm/06/a57/tm6a57.pdf",
         "https://pubs.usgs.gov/tm/06/a55/tm6a55.pdf",
         "https://pubs.usgs.gov/tm/06/a56/tm6a56.pdf",
+        "https://pubs.usgs.gov/tm/06/a61/tm6a61.pdf",
+        "https://pubs.usgs.gov/tm/06/a62/tm6a62.pdf",
     ]:
         print("  downloading {}".format(url))
         destination = os.path.join(distribution_path, "doc")
