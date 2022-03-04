@@ -15,6 +15,7 @@ from contextlib import contextmanager
 DISTRIBUTION_PATH = "./distribution/mf6dev"
 MODFLOW6_PATH = "../modflow6"
 MODFLOW6_EXAMPLES_PATH = "../modflow6-examples"
+FORTRAN_COMPILER = "gfortran"
 
 
 @contextmanager
@@ -82,6 +83,30 @@ def get_modflow6_examples_path(modflow6_examples_path=None):
         modflow6_examples_path = env_var
 
     return modflow6_examples_path
+    
+def get_compiler(fortran_compiler=None):
+
+    # set to default if not passed in
+    if fortran_compiler is None:
+        fortran_compiler = FORTRAN_COMPILER
+
+    # override if -fc argument was set
+    for idx, arg in enumerate(sys.argv):
+        if arg == "-fc":
+            fortran_compiler = sys.argv[idx + 1]
+
+    # override again if environmental variable set
+    env_var = os.environ.get("FC")
+    if env_var is None:
+       print(f"setting environmental variable FC={fortran_compiler}")
+       os.environ["FC"] = fortran_compiler
+    else:
+        if fortran_compiler != env_var:
+            os.environ["FC"] = fortran_compiler
+            print(f"setting environmental variable FC={fortran_compiler}")
+
+    return fortran_compiler
+
 
 
 def get_platform():
@@ -113,7 +138,7 @@ def run_command(argv, pth, timeout=None, verbose=True, terminate_on_failure=Fals
     if verbose:
         print(f"Running system command ({' '.join(argv)}) in directory: {pth}")
     with subprocess.Popen(
-        argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=pth
+        argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=pth,
     ) as process:
         try:
             output, unused_err = process.communicate(timeout=timeout)
@@ -174,9 +199,17 @@ def set_modflow6_release_info(modflow6_path):
 
 def meson_build_binaries(modflow6_dir, verbose=True):
 
+    # Clean existing builddir
+    build_path = os.path.join(modflow6_dir, "builddir")
+    print(f"cleaning existing meson build directory...'{os.path.abspath(build_path)}'")
+    if os.path.isdir(build_path):
+        shutil.rmtree(build_path)
+
     # Create the command list
     abspath_modflow6_dir = os.path.abspath(modflow6_dir)
     cmd_list = ["meson", "setup", "builddir", f"--prefix={abspath_modflow6_dir}", "--libdir=bin"]
+    
+    # get copy of 
 
     # use meson to setup the build system
     buff, ierr = run_command(cmd_list, modflow6_dir, verbose=True, terminate_on_failure=True)
@@ -840,8 +873,10 @@ if __name__ == "__main__":
     #     -dp <distribution path>
     #     -mf6p <mf6 repository path>
     #     -mf6ep <mf6 examples repo path>
+    #     -fc <fortran compiler>
     #   examples:
     #     python make_distribution.py -dp ./mf6.3.0win -mf6p ../modflow6-fork.git -mf6ep ../modflow6-examples.git
+    #     python make_distribution.py -dp ./mf6.3.0_linux -mf6p ../modflow6-fork.git -mf6ep ../modflow6-examples.git -fc ifort
     #     python make_distribution.py -dp ./distribution/mf6dev -mf6p ../modflow6-fork.git -mf6ep ../modflow6-examples.git
     #     python -c "import make_distribution; make_distribution.build_example_run_scripts_linux('./distribution/mf6dev')"
 
@@ -849,6 +884,9 @@ if __name__ == "__main__":
     modflow6_path = get_modflow6_path()
     modflow6_examples_path = get_modflow6_examples_path()
     distribution_path = get_distribution_path()
+    
+    # set fortran compiler
+    fortran_compiler = get_compiler()
 
     do_step = True
 
