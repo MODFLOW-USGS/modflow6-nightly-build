@@ -1,5 +1,3 @@
-
-
 import sys
 import os
 import stat
@@ -15,6 +13,8 @@ from contextlib import contextmanager
 DISTRIBUTION_PATH = "./distribution/mf6dev"
 MODFLOW6_PATH = "../modflow6"
 MODFLOW6_EXAMPLES_PATH = "../modflow6-examples"
+FORTRAN_COMPILER = "gfortran"
+KEEP = False
 
 
 @contextmanager
@@ -96,6 +96,49 @@ def get_modflow6_examples_path(modflow6_examples_path=None):
     return modflow6_examples_path
 
 
+def get_compiler(fortran_compiler=None):
+
+    set_environmental_var = True
+
+    # set fortran_compiler if -fc argument was set
+    for idx, arg in enumerate(sys.argv):
+        if arg == "-fc":
+            fortran_compiler = sys.argv[idx + 1]
+            set_environmental_var = True
+
+    # use environmental variable set if fortran compiler is not set
+    if fortran_compiler is None:
+        fortran_compiler = os.environ.get("FC")
+        if fortran_compiler is not None:
+            set_environmental_var = False
+
+    # set to default if not set by command line argument
+    # of environmental variables
+    if fortran_compiler is None:
+        fortran_compiler = FORTRAN_COMPILER
+
+    # set environmental variable
+    if set_environmental_var:
+        print(f"setting environmental variable FC={fortran_compiler}")
+        os.environ["FC"] = fortran_compiler
+
+    return fortran_compiler
+
+
+def get_keep(keep=None):
+
+    # set to default if not passed in
+    if keep is None:
+        ckeep = KEEP
+
+    # override if -keep argument was set
+    for idx, arg in enumerate(sys.argv):
+        if arg in ("-k", "--keep"):
+            keep = True
+
+    return keep
+
+
 def get_platform():
     sys_platform = sys.platform
     platform = "unknown"
@@ -121,11 +164,19 @@ def delete_files(files, pth, allow_failure=False):
     return True
 
 
-def run_command(argv, pth, timeout=None, verbose=True, terminate_on_failure=False):
+def run_command(
+    argv, pth, timeout=None, verbose=True, terminate_on_failure=False
+):
     if verbose:
-        print(f"Running system command ({' '.join(argv)}) in directory: {pth}")
+        print(
+            "Running system command "
+            + f"({' '.join(argv)}) in directory: {pth}"
+        )
     with subprocess.Popen(
-        argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=pth
+        argv,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        cwd=pth,
     ) as process:
         try:
             output, unused_err = process.communicate(timeout=timeout)
@@ -134,18 +185,21 @@ def run_command(argv, pth, timeout=None, verbose=True, terminate_on_failure=Fals
         except subprocess.TimeoutExpired:
             process.kill()
             output, unused_err = process.communicate()
-            buff = output.decode("utf-8")
+            buff = output.decode("utf-8") + unused_err.decode("utf-8")
             ierr = 100
         except:
             output, unused_err = process.communicate()
-            buff = output.decode("utf-8")
+            buff = output.decode("utf-8") + unused_err.decode("utf-8")
             ierr = 101
     if terminate_on_failure:
         if ierr != 0:
             if verbose:
                 print(f"Failed to execute system command {argv}")
                 print(buff)
-            raise Exception(f"Failed to execute system command {argv}")
+            raise Exception(
+                f"Failed to execute system command {argv}\n"
+                + f"return code {ierr}"
+            )
 
     return buff, ierr
 
@@ -179,23 +233,46 @@ def set_modflow6_release_info(modflow6_path):
         cmd.append(developMode)
 
     pth = os.path.join(modflow6_path, "distribution")
-    buff, ierr = run_command(cmd, pth, verbose=True, terminate_on_failure=True)
+    buff, ierr = run_command(
+        cmd,
+        pth,
+        verbose=True,
+        terminate_on_failure=True,
+    )
 
     return
 
 
 def meson_build_binaries(modflow6_dir, verbose=True):
 
+    # Clean existing builddir
+    build_path = os.path.join(modflow6_dir, "builddir")
+    print(
+        f"cleaning existing meson build directory...'{os.path.abspath(build_path)}'"
+    )
+    if os.path.isdir(build_path):
+        shutil.rmtree(build_path)
+
     # Create the command list
     abspath_modflow6_dir = os.path.abspath(modflow6_dir)
-    cmd_list = ["meson", "setup", "builddir", f"--prefix={abspath_modflow6_dir}", "--libdir=bin"]
+    cmd_list = [
+        "meson",
+        "setup",
+        "builddir",
+        f"--prefix={abspath_modflow6_dir}",
+        "--libdir=bin",
+    ]
 
     # use meson to setup the build system
-    buff, ierr = run_command(cmd_list, modflow6_dir, verbose=True, terminate_on_failure=True)
+    buff, ierr = run_command(
+        cmd_list, modflow6_dir, verbose=True, terminate_on_failure=True
+    )
 
     # run the meson build
     cmd_list = ["meson", "install", "-C", "builddir"]
-    buff, ierr = run_command(cmd_list, modflow6_dir, verbose=True, terminate_on_failure=True)
+    buff, ierr = run_command(
+        cmd_list, modflow6_dir, verbose=True, terminate_on_failure=True
+    )
 
     return
 
@@ -226,23 +303,34 @@ def initialize_new_distribution(modflow6_path, distribution_path):
     # Create a new folder and set up structure
     print(f"Creating new distribution path: {distribution_path}")
     if os.path.isdir(distribution_path):
-        errmsg = f"Distribution path cannot already exist.  Remove {distribution_path}."
+        errmsg = (
+            "Distribution path cannot already exist. "
+            + f"Remove {distribution_path}."
+        )
         raise Exception(errmsg)
     else:
         os.makedirs(distribution_path)
 
     # copy source and sourcebmi to distribution
     print("Copying src and srcbmi...")
-    shutil.copytree(f"{modflow6_path}/src", os.path.join(distribution_path, "src"), dirs_exist_ok=True)
-    shutil.copytree(f"{modflow6_path}/srcbmi", os.path.join(distribution_path, "srcbmi"), dirs_exist_ok=True)
+    shutil.copytree(
+        f"{modflow6_path}/src",
+        os.path.join(distribution_path, "src"),
+        dirs_exist_ok=True,
+    )
+    shutil.copytree(
+        f"{modflow6_path}/srcbmi",
+        os.path.join(distribution_path, "srcbmi"),
+        dirs_exist_ok=True,
+    )
 
     # Create subdirectories
     subdirs = [
         "bin",
         "doc",
         "examples",
-        #"src",
-        #"srcbmi",
+        # "src",
+        # "srcbmi",
         "make",
         "msvs",
         "utils",
@@ -291,11 +379,18 @@ def build_makefile(distribution_path, target="mf6", extrafiles=None):
             extrafiles=extrafiles,
         )
         assert os.path.isfile("makefile"), f"Makefile not found in {makedir}"
-        assert os.path.isfile("makedefaults"), f"Makedefaults not found in {makedir}"
+        assert os.path.isfile(
+            "makedefaults"
+        ), f"Makedefaults not found in {makedir}"
     return
 
 
-def build_utility(modflow6_path, distribution_path, utility_name, target_name=None):
+def build_utility(
+    modflow6_path,
+    distribution_path,
+    utility_name,
+    target_name=None,
+):
 
     # allow utility target name (zbud6) to be different from utility_name (zonebudget)
     if target_name is None:
@@ -312,21 +407,25 @@ def build_utility(modflow6_path, distribution_path, utility_name, target_name=No
     # copy the source folder to the distribution folder
     src = os.path.join(modflow6_path, "utils", utility_name, "src")
     dst = os.path.join(distribution_path, "utils", utility_name, "src")
-    print (f"Copying {src} ===> {dst}")
+    print(f"Copying {src} ===> {dst}")
     shutil.copytree(src, dst)
 
     # copy the visual studio project file
-    src = os.path.join(modflow6_path, "utils", utility_name, "msvs", f"{utility_name}.vfproj")
+    src = os.path.join(
+        modflow6_path, "utils", utility_name, "msvs", f"{utility_name}.vfproj"
+    )
     dst = os.path.join(distribution_path, "utils", utility_name, "msvs")
-    print (f"Copying {src} ===> {dst}")
+    print(f"Copying {src} ===> {dst}")
     shutil.copy(src, dst)
 
     # if there are extra files then copy the extrafiles.txt
     extrafiles = None
-    src = os.path.join(modflow6_path, "utils", utility_name, "pymake", "extrafiles.txt")
+    src = os.path.join(
+        modflow6_path, "utils", utility_name, "pymake", "extrafiles.txt"
+    )
     if os.path.isfile(src):
         dst = os.path.join(distribution_path, "utils", utility_name, "make")
-        print (f"Copying {src} ===> {dst}")
+        print(f"Copying {src} ===> {dst}")
         shutil.copy(src, dst)
         extrafiles = "extrafiles.txt"
 
@@ -334,6 +433,7 @@ def build_utility(modflow6_path, distribution_path, utility_name, target_name=No
     build_makefile(utility_path, target=target_name, extrafiles=extrafiles)
 
     return
+
 
 def download_published_reports(distribution_path):
     print("Downloading published reports.")
@@ -346,7 +446,9 @@ def download_published_reports(distribution_path):
     ]:
         print("  downloading {}".format(url))
         destination = os.path.join(distribution_path, "doc")
-        pymake.download_and_unzip(url, pth=destination, delete_zip=False, verify=False)
+        pymake.download_and_unzip(
+            url, pth=destination, delete_zip=False, verify=False
+        )
     print("\n")
     return
 
@@ -380,7 +482,9 @@ def clean_latex_files(modflow6_path):
     if check:
         assert not os.path.isfile(pth + ".pdf")
 
-    pth = os.path.join(modflow6_path, "..", "modflow6-docs.git", "mf6suptechinfo")
+    pth = os.path.join(
+        modflow6_path, "..", "modflow6-docs.git", "mf6suptechinfo"
+    )
     files = ["mf6suptechinfo.{}".format(e) for e in exts]
     delete_files(files, pth, allow_failure=True)
     if check:
@@ -415,7 +519,9 @@ def rebuild_tex_from_dfn(modflow6_path):
 
         # run python
         argv = ["python", "mf6ivar.py"]
-        buff, ierr = run_command(argv, pth, verbose=True, terminate_on_failure=True)
+        buff, ierr = run_command(
+            argv, pth, verbose=True, terminate_on_failure=True
+        )
 
         # get list for dfn files
         dfnfiles = [
@@ -456,7 +562,9 @@ def create_simple_testmodel(temp_path, bin_path):
     if sys.platform.lower() == "win32":
         exe_name += ".exe"
     exe_name = os.path.join(bin_path, exe_name)
-    sim = flopy.mf6.MFSimulation(sim_name=name, sim_ws=temp_path, exe_name=exe_name)
+    sim = flopy.mf6.MFSimulation(
+        sim_name=name, sim_ws=temp_path, exe_name=exe_name
+    )
     tdis = flopy.mf6.ModflowTdis(sim)
     ims = flopy.mf6.ModflowIms(sim)
     gwf = flopy.mf6.ModflowGwf(sim, modelname=name, save_flows=True)
@@ -473,7 +581,11 @@ def create_simple_testmodel(temp_path, bin_path):
     return
 
 
-def update_mf6io_tex_files(modflow6_path, mf6bin_path, expth):
+def update_mf6io_tex_files(
+    modflow6_path,
+    mf6bin_path,
+    expth,
+):
 
     texpth = os.path.join(modflow6_path, "doc", "mf6io")
     fname1 = os.path.join(texpth, "mf6output.tex")
@@ -489,7 +601,9 @@ def update_mf6io_tex_files(modflow6_path, mf6bin_path, expth):
     print(f"Running simple test model with {abs_mf6bin_path}.")
     cmd = [abs_mf6bin_path]
     simpth = expth
-    buff, ierr = run_command(cmd, simpth, verbose=False, terminate_on_failure=True)
+    buff, ierr = run_command(
+        cmd, simpth, verbose=False, terminate_on_failure=True
+    )
     lines = buff.split("\r\n")
     with open(fname1, "w") as f:
         f.write("{}\n".format("{\\small"))
@@ -505,7 +619,9 @@ def update_mf6io_tex_files(modflow6_path, mf6bin_path, expth):
         shutil.rmtree("./temp")
     os.mkdir("./temp")
     cmd = [abs_mf6bin_path]
-    buff, ierr = run_command(cmd, "./temp", verbose=False, terminate_on_failure=False)
+    buff, ierr = run_command(
+        cmd, "./temp", verbose=False, terminate_on_failure=False
+    )
     lines = buff.split("\r\n")
     with open(fname2, "w") as f:
         f.write("{}\n".format("{\\small"))
@@ -518,7 +634,9 @@ def update_mf6io_tex_files(modflow6_path, mf6bin_path, expth):
     # run mf6 command with -h to show help
     print(f"Running mf6 with -h option to give help commands.")
     cmd = [abs_mf6bin_path, "-h"]
-    buff, ierr = run_command(cmd, "./temp", verbose=False, terminate_on_failure=True)
+    buff, ierr = run_command(
+        cmd, "./temp", verbose=False, terminate_on_failure=True
+    )
     lines = buff.split("\r\n")
     with open(fname3, "w") as f:
         f.write("{}\n".format("{\\small"))
@@ -531,7 +649,10 @@ def update_mf6io_tex_files(modflow6_path, mf6bin_path, expth):
     return
 
 
-def update_latex_releaseinfo(modflow6_path, distribution_path):
+def update_latex_releaseinfo(
+    modflow6_path,
+    distribution_path,
+):
 
     pth = os.path.join(modflow6_path, "doc", "ReleaseNotes")
     files = ["folder_struct.tex"]
@@ -541,10 +662,10 @@ def update_latex_releaseinfo(modflow6_path, distribution_path):
     cmd = ["python", "mk_folder_struct.py", "-dp", abs_dp]
     buff, ierr = run_command(cmd, pth, verbose=True, terminate_on_failure=True)
 
-    #cmd = ["python", "mk_runtimecomp.py"]
-    #buff, ierr = run_command(cmd, pth)
-    #msg = "\nERROR {}: could not run {} on {}".format(ierr, cmd[0], cmd[1])
-    #assert ierr == 0, buff + msg
+    # cmd = ["python", "mk_runtimecomp.py"]
+    # buff, ierr = run_command(cmd, pth)
+    # msg = "\nERROR {}: could not run {} on {}".format(ierr, cmd[0], cmd[1])
+    # assert ierr == 0, buff + msg
 
     for f in files:
         assert os.path.isfile(os.path.join(pth, f)), (
@@ -554,7 +675,11 @@ def update_latex_releaseinfo(modflow6_path, distribution_path):
     return
 
 
-def build_latex_docs(modflow6_path, modflow6_examples_path, distribution_path):
+def build_latex_docs(
+    modflow6_path,
+    modflow6_examples_path,
+    distribution_path,
+):
     print("Building latex files")
     modflow6_doc_path = os.path.join(modflow6_path, "doc")
     doclist = [
@@ -580,26 +705,37 @@ def build_latex_docs(modflow6_path, modflow6_examples_path, distribution_path):
 
             print("  Pass 1/4...")
             cmd = pdflatexcmd
-            buff, ierr = run_command(cmd, "./", verbose=True, terminate_on_failure=True)
+            buff, ierr = run_command(
+                cmd, "./", verbose=True, terminate_on_failure=True
+            )
 
             cmd = ["bibtex", os.path.splitext(t)[0] + ".aux"]
             print("  Pass 2/4...")
-            buff, ierr = run_command(cmd, "./", verbose=True, terminate_on_failure=False)
+            buff, ierr = run_command(
+                cmd, "./", verbose=True, terminate_on_failure=False
+            )
             msg = "\nERROR {}: could not run {} on {}".format(
                 ierr, cmd[0], cmd[1]
             )
             if ierr != 0:
                 # This can happen with zonebudget, for example, which does not have any references.
-                print(f"Warning building {dirname}.  Bibtex did not terminate normally.  This may be normal.")
+                print(
+                    f"Warning building {dirname}. "
+                    + "Bibtex did not terminate normally. This may be normal."
+                )
                 print(buff + msg)
 
             print("  Pass 3/4...")
             cmd = pdflatexcmd
-            buff, ierr = run_command(cmd, "./", verbose=True, terminate_on_failure=True)
+            buff, ierr = run_command(
+                cmd, "./", verbose=True, terminate_on_failure=True
+            )
 
             print("  Pass 4/4...")
             cmd = pdflatexcmd
-            buff, ierr = run_command(cmd, "./", verbose=True, terminate_on_failure=True)
+            buff, ierr = run_command(
+                cmd, "./", verbose=True, terminate_on_failure=True
+            )
 
             fname = f"{t}.pdf"
             assert os.path.isfile(fname), "Could not find " + fname
@@ -621,7 +757,11 @@ def latex_is_available():
         return True
 
 
-def build_latex(modflow6_path, modflow6_examples_path, distribution_path):
+def build_latex(
+    modflow6_path,
+    modflow6_examples_path,
+    distribution_path,
+):
     if latex_is_available():
 
         # set paths
@@ -639,14 +779,19 @@ def build_latex(modflow6_path, modflow6_examples_path, distribution_path):
         update_latex_releaseinfo(modflow6_path, distribution_path)
 
         # build the pdfs from the latex docs
-        build_latex_docs(modflow6_path, modflow6_examples_path, distribution_path)
+        build_latex_docs(
+            modflow6_path, modflow6_examples_path, distribution_path
+        )
 
         # clean up
         # if os.path.isdir(temp_path):
         #     shutil.rmtree(temp_path)
 
     else:
-        print(f"Warning. Latex is not available so latex documents were not built.")
+        print(
+            "Warning. Latex is not available "
+            + "so latex documents were not built."
+        )
     return
 
 
@@ -666,8 +811,8 @@ def build_examples(modflow6_examples_path, distribution_path):
         fname
         for fname in os.listdir(scripts_folder)
         if fname.endswith(".py")
-           and fname.startswith("ex-")
-           and fname not in exclude_list
+        and fname.startswith("ex-")
+        and fname not in exclude_list
     ]
     for script in scripts:
         dest = os.path.abspath(examples_destination)
@@ -676,10 +821,13 @@ def build_examples(modflow6_examples_path, distribution_path):
             script,
             "--no_run",
             "--no_plot",
+            "--no_gif",
             "--destination",
             dest,
         ]  # no run no plot
-        buff, ierr = run_command(argv, scripts_folder, verbose=True, terminate_on_failure=True)
+        buff, ierr = run_command(
+            argv, scripts_folder, verbose=True, terminate_on_failure=True
+        )
 
     return
 
@@ -793,9 +941,15 @@ def build_example_run_scripts_linux(distribution_path):
     return
 
 
-def build_and_run_examples(modflow6_examples_path, distribution_path):
+def build_and_run_examples(
+    modflow6_examples_path,
+    distribution_path,
+    keep,
+):
     if latex_is_available():
-        print("Building and running examples so that mf6examples.pdf can be built with LaTex.")
+        print(
+            "Building and running examples so that mf6examples.pdf can be built with LaTex."
+        )
 
         bin_pth = os.path.join(modflow6_examples_path, "bin")
         print(f"Using pymake to download binary executables into {bin_pth}.")
@@ -810,19 +964,45 @@ def build_and_run_examples(modflow6_examples_path, distribution_path):
         print("Running modflow6examples.")
         # run modflow6examples/etc/ci_build_files.py -r to build and run examples
         script_path = os.path.join(modflow6_examples_path, "scripts")
-        scripts = [file_name for file_name in sorted(os.listdir(script_path)) if
-                   file_name.endswith(".py") and file_name.startswith("ex-")]
+        scripts = [
+            file_name
+            for file_name in sorted(os.listdir(script_path))
+            if file_name.endswith(".py") and file_name.startswith("ex-")
+        ]
         for s in scripts:
-            args = ["python", s]
-            buff, ierr = run_command(args, pth=script_path, verbose=True, terminate_on_failure=True)
+            args = ["python", s, "--no_gif"]
+            buff, ierr = run_command(
+                args, pth=script_path, verbose=True, terminate_on_failure=True
+            )
+            if not keep:
+                examples_pth = os.path.join(modflow6_examples_path, "examples")
+                clean_dirs = [
+                    dir_name
+                    for dir_name in os.listdir(examples_pth)
+                    if s.replace(".py", "") in dir_name
+                ]
+                for dir_name in clean_dirs:
+                    clean_example_dir(os.path.join(examples_pth, dir_name))
 
         # run process-scripts.py in modflow6examples/scripts.  Once completed, the build_latex()
         # script can make mf6examples.pdf
         print("Running the process-scripts.py command.")
-        buff, ierr = run_command(["python", "process-scripts.py"], script_path, verbose=True, terminate_on_failure=True)
+        buff, ierr = run_command(
+            ["python", "process-scripts.py"],
+            script_path,
+            verbose=True,
+            terminate_on_failure=True,
+        )
     else:
-        print("Skipping building and running of examples because latex is not available.")
+        print(
+            "Skipping building and running of examples because latex is not available."
+        )
     return
+
+
+def clean_example_dir(dir_pth):
+    print(f"deleting...'{dir_pth}'")
+    shutil.rmtree(dir_pth)
 
 
 def copy_meson_files(modflow6_path, distribution_path):
@@ -858,8 +1038,10 @@ if __name__ == "__main__":
     #     -dp <distribution path>
     #     -mf6p <mf6 repository path>
     #     -mf6ep <mf6 examples repo path>
+    #     -fc <fortran compiler>
     #   examples:
     #     python make_distribution.py -dp ./mf6.3.0 -mf6p ../modflow6-fork.git -mf6ep ../modflow6-examples.git --isApproved
+    #     python make_distribution.py -dp ./mf6.3.0_linux -mf6p ../modflow6-fork.git -mf6ep ../modflow6-examples.git -fc ifort
     #     python make_distribution.py -dp ./distribution/mf6dev -mf6p ../modflow6-fork.git -mf6ep ../modflow6-examples.git
     #     python -c "import make_distribution; make_distribution.build_example_run_scripts_linux('./distribution/mf6dev')"
 
@@ -867,6 +1049,12 @@ if __name__ == "__main__":
     modflow6_path = get_modflow6_path()
     modflow6_examples_path = get_modflow6_examples_path()
     distribution_path = get_distribution_path()
+
+    # set fortran compiler
+    fortran_compiler = get_compiler()
+
+    # set keep
+    keep = get_keep()
 
     do_step = True
 
@@ -899,7 +1087,11 @@ if __name__ == "__main__":
         build_example_run_scripts_linux(distribution_path)
 
     if do_step:
-        build_and_run_examples(modflow6_examples_path, distribution_path)
+        build_and_run_examples(
+            modflow6_examples_path,
+            distribution_path,
+            keep,
+        )
 
     if do_step:
         # todo: mk_runtimecomp.py
