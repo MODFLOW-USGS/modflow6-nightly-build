@@ -98,24 +98,29 @@ def get_modflow6_examples_path(modflow6_examples_path=None):
 
 def get_compiler(fortran_compiler=None):
 
-    # set to default if not passed in
-    if fortran_compiler is None:
-        fortran_compiler = FORTRAN_COMPILER
+    set_environmental_var = True
 
-    # override if -fc argument was set
+    # set fortran_compiler if -fc argument was set
     for idx, arg in enumerate(sys.argv):
         if arg == "-fc":
             fortran_compiler = sys.argv[idx + 1]
+            set_environmental_var = True
 
-    # override again if environmental variable set
-    env_var = os.environ.get("FC")
-    if env_var is None:
+    # use environmental variable set if fortran compiler is not set
+    if fortran_compiler is None:
+        fortran_compiler = os.environ.get("FC")
+        if fortran_compiler is not None:
+            set_environmental_var = False
+
+    # set to default if not set by command line argument
+    # of environmental variables
+    if fortran_compiler is None:
+        fortran_compiler = FORTRAN_COMPILER
+
+    # set environmental variable
+    if set_environmental_var:
         print(f"setting environmental variable FC={fortran_compiler}")
         os.environ["FC"] = fortran_compiler
-    else:
-        if fortran_compiler != env_var:
-            os.environ["FC"] = fortran_compiler
-            print(f"setting environmental variable FC={fortran_compiler}")
 
     return fortran_compiler
 
