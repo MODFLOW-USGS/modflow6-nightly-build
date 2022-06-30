@@ -94,13 +94,11 @@ jobs:
 
       - name: Print python package versions
         run: |
-          pip -V
           pip list
 
       - name: Build and zip applications
         shell: bash
         working-directory: modflow6/distribution
         run: |
-          pytest -v build_nightly.py
+          python build_nightly.py
 
-#

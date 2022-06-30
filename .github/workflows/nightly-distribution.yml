@@ -152,7 +152,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: |
-          call ".github/intel-scripts/ifortvars_windows.bat"
+          call ".github/intel-scripts/build_windows.bat fortran $VS_VER"
           python make_distribution.py -mf6p ./modflow6 -mf6ep ./modflow6-examples -dp ./${{ runner.os }}
 
       - name: Create an artifact of the distributions
