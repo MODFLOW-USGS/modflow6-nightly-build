@@ -32,7 +32,7 @@ jobs:
             artifact_name: linux.zip
           - os: macos-latest
             artifact_name: mac.zip
-          - os: windows-2019
+          - os: windows-latest
             artifact_name: win64.zip
     defaults:
       run:
@@ -46,6 +46,7 @@ jobs:
       LINUX_FORTRAN_COMPONENTS_WEB: intel.oneapi.lin.ifort-compiler
       MACOS_FORTRAN_COMPONENTS: intel.oneapi.mac.ifort-compiler
       FC: ifort
+      VS_VER: vs2022
 
     steps:
       - name: Checkout this github repo
@@ -128,15 +129,15 @@ jobs:
         working-directory: modflow6/distribution
         run: |
           source /opt/intel/oneapi/setvars.sh
-          pytest -v build_nightly.py
+          python -v build_nightly.py
 
       - name: Build and zip applications on Windows
         if: runner.os == 'Windows'
         working-directory: modflow6/distribution
         shell: cmd
         run: |
-          call "../../.github/intel-scripts/ifortvars_windows.bat"
-          pytest -v build_nightly.py
+          call "../../.github/intel-scripts/build_windows.bat fortran $VS_VER"
+          python build_nightly.py
 
       - name: Move the build zip file
         run: |
