@@ -39,226 +39,202 @@ jobs:
         shell: bash
 
     env:
-      WINDOWS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18417/w_HPCKit_p_2022.1.0.93_offline.exe
-      LINUX_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18438/l_HPCKit_p_2022.1.1.97_offline.sh
-      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18341/m_HPCKit_p_2022.1.0.86_offline.dmg
+      WINDOWS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18680/w_HPCKit_p_2022.2.0.173_offline.exe
+      LINUX_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18679/l_HPCKit_p_2022.2.0.191_offline.sh
+      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18681/m_HPCKit_p_2022.2.0.158_offline.dmg
       WINDOWS_FORTRAN_COMPONENTS: intel.oneapi.win.ifort-compiler
       LINUX_FORTRAN_COMPONENTS_WEB: intel.oneapi.lin.ifort-compiler
       MACOS_FORTRAN_COMPONENTS: intel.oneapi.mac.ifort-compiler
+      FC: ifort
 
     steps:
-    - name: Checkout this github repo
-      uses: actions/checkout@v2.3.4
+      - name: Checkout this github repo
+        uses: actions/checkout@v2.3.4
 
-    - name: cache install ifort on linux
-      if: runner.os == 'Linux'
-      id: cache-install-linux
-      uses: actions/cache@v2
-      with:
-        path: |
-          /opt/intel/oneapi
-        key: install-${{ env.LINUX_HPCKIT_URL }}-${{ env.LINUX_FORTRAN_COMPONENTS_WEB }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_linux.sh') }}
+      - name: Setup Python
+        uses: actions/setup-python@v4.0.0
+        with:
+          python-version: 3.9
 
-    - name: install ifort on linux
-      if: runner.os == 'Linux' && steps.cache-install-linux.outputs.cache-hit != 'true'
-      run: |
-        .github/intel-scripts/install_linux.sh $LINUX_HPCKIT_URL $LINUX_FORTRAN_COMPONENTS_WEB
+      - name: Install python packages
+        run: |
+          .github/common/install-python-std.sh
 
-    - name: cache install ifort on macos
-      if: runner.os == 'macOS'
-      id: cache-install-macos
-      uses: actions/cache@v2
-      with:
-        path: /opt/intel/oneapi
-        key: install-${{ env.MACOS_HPCKIT_URL }}-${{ env.MACOS_FORTRAN_COMPONENTS }}
+      - name: Print python package versions
+        run: |
+          pip list
 
-    - name: install ifort on macos
-      if: runner.os == 'macOS' && steps.cache-install-macos.outputs.cache-hit != 'true'
-      run: |
-        .github/intel-scripts/install_macos.sh $MACOS_HPCKIT_URL $MACOS_FORTRAN_COMPONENTS
+      - name: cache install ifort on linux
+        if: runner.os == 'Linux'
+        id: cache-install-linux
+        uses: actions/cache@v2
+        with:
+          path: |
+            /opt/intel/oneapi
+          key: install-${{ env.LINUX_HPCKIT_URL }}-${{ env.LINUX_FORTRAN_COMPONENTS_WEB }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_linux.sh') }}
 
-    - name: cache install ifort on windows
-      if: runner.os == 'Windows'
-      id: cache-install-windows
-      uses: actions/cache@v2
-      with:
-        path: C:\Program Files (x86)\Intel\oneAPI
-        key: install-${{ env.WINDOWS_HPCKIT_URL }}-${{ env.WINDOWS_FORTRAN_COMPONENTS }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_windows.sh') }}
+      - name: install ifort on linux
+        if: runner.os == 'Linux' && steps.cache-install-linux.outputs.cache-hit != 'true'
+        run: |
+          .github/intel-scripts/install_linux.sh $LINUX_HPCKIT_URL $LINUX_FORTRAN_COMPONENTS_WEB
 
-    - name: install ifort on windows
-      if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
-      run: |
-        .github/intel-scripts/install_windows.bat $WINDOWS_HPCKIT_URL $WINDOWS_FORTRAN_COMPONENTS
+      - name: cache install ifort on macos
+        if: runner.os == 'macOS'
+        id: cache-install-macos
+        uses: actions/cache@v2
+        with:
+          path: /opt/intel/oneapi
+          key: install-${{ env.MACOS_HPCKIT_URL }}-${{ env.MACOS_FORTRAN_COMPONENTS }}
 
-    - name: setup-conda
-      uses: s-weigand/setup-conda@v1.0.5
-      with:
-        update-conda: true
+      - name: install ifort on macos
+        if: runner.os == 'macOS' && steps.cache-install-macos.outputs.cache-hit != 'true'
+        run: |
+          .github/intel-scripts/install_macos.sh $MACOS_HPCKIT_URL $MACOS_FORTRAN_COMPONENTS
 
-    - name: Install python packages
-      run: |
-        conda info
-        conda install pip requests appdirs nose wheel
-        # use pip to install numpy and matplotlib because of a windows issue
-        pip install numpy matplotlib
-        pip install https://github.com/modflowpy/flopy/zipball/develop
-        pip install https://github.com/modflowpy/pymake/zipball/master
+      - name: cache install ifort on windows
+        if: runner.os == 'Windows'
+        id: cache-install-windows
+        uses: actions/cache@v2
+        with:
+          path: C:\Program Files (x86)\Intel\oneAPI
+          key: install-${{ env.WINDOWS_HPCKIT_URL }}-${{ env.WINDOWS_FORTRAN_COMPONENTS }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_windows.sh') }}
 
-    - name: Clone MODFLOW 6 repo
-      run: |
-        git clone https://github.com/MODFLOW-USGS/modflow6.git modflow6
+      - name: install ifort on windows
+        if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
+        run: |
+          .github/intel-scripts/install_windows.bat $WINDOWS_HPCKIT_URL $WINDOWS_FORTRAN_COMPONENTS
 
-    - name: Determine MODFLOW 6 branch
-      run: |
-        pwd
-        cd ./modflow6/
-        pwd
-        git branch
-        cd ../
-        pwd
-        ls ./
+      - name: Clone MODFLOW 6 repo
+        run: |
+          git clone https://github.com/MODFLOW-USGS/modflow6.git modflow6
 
-    - name: Update flopy MODFLOW 6 classes
-      run: |
-        cd ./modflow6/autotest
-        python update_flopy.py
-        cd ../../
+      - name: Determine MODFLOW 6 branch
+        run: |
+          pwd
+          cd ./modflow6/
+          pwd
+          git branch
+          cd ../
+          pwd
+          ls ./
 
-    - name: Print python package versions
-      shell: python
-      run: |
-        import sys
-        import nose
-        import numpy as np
-        import matplotlib as mpl
-        import flopy
-        import pymake
-        flopypth = flopy.__path__[0]
-        pymakepth = pymake.__path__[0]
-        print("python version:     {}".format(sys.version))
-        print("nosetest version:   {}".format(nose.__version__))
-        print("numpy version:      {}".format(np.__version__))
-        print("matplotlib version: {}".format(mpl.__version__))
-        print("flopy version:      {}".format(flopy.__version__))
-        print("pymake version:     {}".format(pymake.__version__))
-        print("")
-        print("flopy is installed in:  {}".format(flopypth))
-        print("pymake is installed in: {}".format(pymakepth))
+      - name: Update flopy MODFLOW 6 classes
+        working-directory: modflow6/autotest
+        run: |
+          python update_flopy.py
 
-    - name: Build and zip applications on linux and MacOS
-      if: runner.os == 'Linux' || runner.os == 'macOS'
-      run: |
-        source /opt/intel/oneapi/setvars.sh
-        cd ./modflow6/distribution/
-        python build_nightly.py -fc ifort
-        cd ../../
+      - name: Build and zip applications on linux and MacOS
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        working-directory: modflow6/distribution
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          pytest -v build_nightly.py
 
-    - name: Build and zip applications on Windows
-      if: runner.os == 'Windows'
-      shell: cmd
-      run: |
-        call ".github/intel-scripts/ifortvars_windows.bat"
-        cd ./modflow6/distribution/
-        python build_nightly.py -fc ifort
-        cd ../../
+      - name: Build and zip applications on Windows
+        if: runner.os == 'Windows'
+        working-directory: modflow6/distribution
+        shell: cmd
+        run: |
+          call "../../.github/intel-scripts/ifortvars_windows.bat"
+          pytest -v build_nightly.py
 
-    - name: Move the build zip file
-      run: |
-        mv ./modflow6/distribution/temp/${{ matrix.artifact_name }} ./${{ matrix.artifact_name }}
-        ls -l ./
+      - name: Move the build zip file
+        run: |
+          mv ./modflow6/distribution/temp/${{ matrix.artifact_name }} ./${{ matrix.artifact_name }}
+          ls -l ./
 
-    # Build LaTeX document
-    - name: Copy the modflow6/docs directory
-      if: runner.os == 'Linux'
-      shell: python
-      run: |
-        import shutil
-        src = "/home/runner/work/modflow6-nightly-build/modflow6-nightly-build/modflow6/doc/"
-        dst = "./doc/"
-        shutil.copytree(src, dst)
+      # Build LaTeX document
+      - name: Copy the modflow6/docs directory
+        if: runner.os == 'Linux'
+        shell: python
+        run: |
+          import shutil
+          src = "/home/runner/work/modflow6-nightly-build/modflow6-nightly-build/modflow6/doc/"
+          dst = "./doc/"
+          shutil.copytree(src, dst)
 
-    - name: Install TeX Live
-      if: runner.os == 'Linux'
-      shell: bash
-      run: |
-        sudo apt-get update
-        sudo apt install texlive-latex-extra texlive-science texlive-font-utils
+      - name: Install TeX Live
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt install texlive-latex-extra texlive-science texlive-font-utils
 
-    - name: Clone USGS LaTeX repo
-      if: runner.os == 'Linux'
-      run: |
-        git clone https://github.com/MODFLOW-USGS/usgslatex.git usgslatex
+      - name: Clone USGS LaTeX repo
+        if: runner.os == 'Linux'
+        run: |
+          git clone https://github.com/MODFLOW-USGS/usgslatex.git usgslatex
 
-    - name: Install USGS LaTeX style files and Univers font
-      if: runner.os == 'Linux'
-      working-directory: ./usgslatex/usgsLaTeX
-      run: |
-        sudo ./install.sh --all-users
+      - name: Install USGS LaTeX style files and Univers font
+        if: runner.os == 'Linux'
+        working-directory: ./usgslatex/usgsLaTeX
+        run: |
+          sudo ./install.sh --all-users
 
-    - name: Build mf6io latex document
-      if: runner.os == 'Linux'
-      shell: python
-      run: |
-        import sys
-        import subprocess
+      - name: Build mf6io latex document
+        if: runner.os == 'Linux'
+        shell: python
+        run: |
+          import sys
+          import subprocess
+          
+          ws = "./modflow6/doc/mf6io/"
+          bibnam = "mf6io"
+          texnam = bibnam + ".tex"
+          cmds = [
+                  ["pdflatex", texnam],
+                  ["bibtex", bibnam],
+                  ["pdflatex", texnam],
+                  ["pdflatex", texnam],
+                 ]
+          for cmd in cmds:
+              print("running command...'{}'".format(" ".join(cmd)))
+              with subprocess.Popen(cmd,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT,
+                                    cwd=ws) as process:
+                  stdout, stderr = process.communicate(timeout=10)
+                  if stdout:
+                      stdout = stdout.decode()
+                      print(stdout)
+                  if stderr:
+                      print("\n\nError condition occurred:\n")
+                      stderr = stderr.decode()
+                      print(stderr)
 
-        ws = "./modflow6/doc/mf6io/"
-        bibnam = "mf6io"
-        texnam = bibnam + ".tex"
-        cmds = [
-                ["pdflatex", texnam],
-                ["bibtex", bibnam],
-                ["pdflatex", texnam],
-                ["pdflatex", texnam],
-               ]
-        for cmd in cmds:
-            print("running command...'{}'".format(" ".join(cmd)))
-            with subprocess.Popen(cmd,
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.STDOUT,
-                                  cwd=ws) as process:
-                stdout, stderr = process.communicate(timeout=10)
-                if stdout:
-                    stdout = stdout.decode()
-                    print(stdout)
-                if stderr:
-                    print("\n\nError condition occurred:\n")
-                    stderr = stderr.decode()
-                    print(stderr)
+      - name: Move the LaTeX document
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          ls -la ./modflow6/doc/mf6io/
+          mv ./modflow6/doc/mf6io/mf6io.pdf mf6io.pdf
+          ls -la ./
 
-    - name: Move the LaTeX document
-      if: runner.os == 'Linux'
-      shell: bash
-      run: |
-        ls -la ./modflow6/doc/mf6io/
-        mv ./modflow6/doc/mf6io/mf6io.pdf mf6io.pdf
-        ls -la ./
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: nightly
+          path: |
+            ./${{ matrix.artifact_name }}
 
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: nightly
-        path: |
-          ./${{ matrix.artifact_name }}
+      - name: Upload additional Build Artifacts
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: nightly
+          path: |
+            ./mf6io.pdf
 
-    - name: Upload additional Build Artifacts
-      if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v2
-      with:
-        name: nightly
-        path: |
-          ./mf6io.pdf
+      - name: exclude unused files from cache on windows
+        if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          .github/intel-scripts/cache_exclude_windows.sh
 
-    - name: exclude unused files from cache on windows
-      if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
-      shell: bash
-      run: |
-        .github/intel-scripts/cache_exclude_windows.sh
-
-    - name: exclude unused files from cache on linux
-      if: runner.os == 'Linux' && steps.cache-install-linux.outputs.cache-hit != 'true'
-      run: |
-        .github/intel-scripts/cache_exclude_linux.sh
+      - name: exclude unused files from cache on linux
+        if: runner.os == 'Linux' && steps.cache-install-linux.outputs.cache-hit != 'true'
+        run: |
+          .github/intel-scripts/cache_exclude_linux.sh
 
   # make the release if previous job was successful
   release:
@@ -270,58 +246,58 @@ jobs:
       github.event_name == 'push' || github.event_name == 'schedule'
 
     steps:
-    - name: Delete Older Releases
-      uses: dev-drprasad/delete-older-releases@v0.2.0
-      with:
-        keep_latest: 30
-        delete_tags: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Delete Older Releases
+        uses: dev-drprasad/delete-older-releases@v0.2.0
+        with:
+          keep_latest: 30
+          delete_tags: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Download a Build Artifact
-      uses: actions/download-artifact@v2
-      with:
-        name: nightly
-        path: ./nightly/
+      - name: Download a Build Artifact
+        uses: actions/download-artifact@v3.0.0
+        with:
+          name: nightly
+          path: ./nightly/
 
-    - name: List files in the artifact directory
-      shell: bash
-      run: |
-        pwd
-        ls -l ./nightly/
+      - name: List files in the artifact directory
+        shell: bash
+        run: |
+          pwd
+          ls -l ./nightly/
 
-    - name: Get Current Time
-      uses: 1466587594/get-current-time@v2
-      id: current-time
-      with:
-        format: YYYYMMDD
+      - name: Get Current Time
+        uses: josStorer/get-current-time@v2.0.0
+        id: current-time
+        with:
+          format: YYYYMMDD
 
-    - name: Use current time
-      env:
-        TIME: "${{ steps.current-time.outputs.time }}"
-        F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
-      run: echo $TIME $F_TIME
+      - name: Use current time
+        env:
+          TIME: "${{ steps.current-time.outputs.time }}"
+          F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
+        run: echo $TIME $F_TIME
 
-    - name: Create a Release
-      uses: ncipollo/release-action@v1.8.0
-      with:
-        tag: ${{ steps.current-time.outputs.formattedTime }}
-        name: ${{ steps.current-time.outputs.formattedTime }} nightly build
-        body: "OneAPI version of Intel ifort compiler used to compile executables for all operating systems."
-        draft: false
-        allowUpdates: true
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create a Release
+        uses: ncipollo/release-action@v1.10.0
+        with:
+          tag: ${{ steps.current-time.outputs.formattedTime }}
+          name: ${{ steps.current-time.outputs.formattedTime }} nightly build
+          body: "OneAPI version of Intel ifort compiler used to compile executables for all operating systems."
+          draft: false
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Upload compiled executables to the latest GitHub release
-      uses: svenstaro/upload-release-action@2.2.0
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./nightly/*
-        tag: ${{ steps.current-time.outputs.formattedTime }}
-        overwrite: true
-        file_glob: true
+      - name: Upload compiled executables to the latest GitHub release
+        uses: svenstaro/upload-release-action@2.3.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./nightly/*
+          tag: ${{ steps.current-time.outputs.formattedTime }}
+          overwrite: true
+          file_glob: true
 
-    - name: Delete Artifact
-      uses: GeekyEggo/delete-artifact@v1.0.0
-      with:
-        name: nightly
+      - name: Delete Artifact
+        uses: GeekyEggo/delete-artifact@v1.0.0
+        with:
+          name: nightly
