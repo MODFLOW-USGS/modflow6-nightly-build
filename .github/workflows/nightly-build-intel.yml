@@ -129,7 +129,7 @@ jobs:
         working-directory: modflow6/distribution
         run: |
           source /opt/intel/oneapi/setvars.sh
-          python -v build_nightly.py
+          python build_nightly.py
 
       - name: Build and zip applications on Windows
         if: runner.os == 'Windows'

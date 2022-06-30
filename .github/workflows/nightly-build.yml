@@ -26,7 +26,7 @@ jobs:
           - os: macos-latest
             artifact_name: mac.zip
             body_name: bodyFileMac
-          - os: windows-latest
+          - os: windows-2019
             artifact_name: win64.zip
             body_name: bodyFileWindows
     defaults:
