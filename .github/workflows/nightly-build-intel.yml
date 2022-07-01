@@ -136,7 +136,7 @@ jobs:
         working-directory: modflow6/distribution
         shell: cmd
         run: |
-          call ../../.github/intel-scripts/build_windows.bat fortran $VS_VER
+          call "../../.github/intel-scripts/build_windows.bat"
           python build_nightly.py
 
       - name: Move the build zip file
