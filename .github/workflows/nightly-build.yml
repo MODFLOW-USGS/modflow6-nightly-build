@@ -98,7 +98,7 @@ jobs:
       - name: Move the build zip file
         run: |
           ls -l ./modflow6/distribution/
-          ls -l ./modflow6/distribution/temp/
-          mv ./modflow6/distribution/temp/${{ matrix.artifact_name }} ./${{ matrix.artifact_name }}
+          ls -l ./modflow6/distribution/temp_zip/
+          mv ./modflow6/distribution/temp_zip/${{ matrix.artifact_name }} ./${{ matrix.artifact_name }}
           ls -l ./
 
