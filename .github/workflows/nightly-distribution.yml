@@ -32,7 +32,7 @@ jobs:
             artifact_name: Linux.zip
           - os: macos-latest
             artifact_name: macOS.zip
-          - os: windows-2019
+          - os: windows-latest
             artifact_name: Windows.zip
     defaults:
       run:
