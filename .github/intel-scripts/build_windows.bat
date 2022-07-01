@@ -7,8 +7,8 @@ REM SPDX-License-Identifier: MIT
 for /f "tokens=* usebackq" %%f in (`dir /b "C:\Program Files (x86)\Intel\oneAPI\compiler\" ^| findstr /V latest ^| sort`) do @set "LATEST_VERSION=%%f"
 @call "C:\Program Files (x86)\Intel\oneAPI\compiler\%LATEST_VERSION%\env\vars.bat"
 
-echo %VS_VER%
-echo %LATEST_VERSION%
+echo "Visual Studio Version: %VS_VER%"
+echo "OneAPI version: %LATEST_VERSION%"
 echo "C:\Program Files (x86)\Intel\oneAPI\compiler\%LATEST_VERSION%\env\vars.bat"
-echo %ONEAPI_ROOT%
+echo "OneAPI root directory: %ONEAPI_ROOT%"
 where ifort.exe
