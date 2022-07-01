@@ -95,3 +95,9 @@ jobs:
         run: |
           python build_nightly.py
 
+      - name: Move the build zip file
+        run: |
+          ls -l ./modflow6/distribution/temp/
+          mv ./modflow6/distribution/temp/${{ matrix.artifact_name }} ./${{ matrix.artifact_name }}
+          ls -l ./
+
