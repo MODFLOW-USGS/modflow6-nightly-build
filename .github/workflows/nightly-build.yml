@@ -59,7 +59,6 @@ jobs:
 
       - name: Setup symbolic link to gfortran on macOS
         if: runner.os == 'macOS'
-        shell: bash
         run: |
           sudo ln -fs /usr/local/bin/gfortran-10 /usr/local/bin/gfortran
           sudo ln -fs /usr/local/bin/gcc-10 /usr/local/bin/gcc
@@ -75,7 +74,6 @@ jobs:
       - name: Clone MODFLOW 6 repo
         run: |
           git clone https://github.com/MODFLOW-USGS/modflow6.git modflow6
-        shell: bash
 
       - name: Determine MODFLOW 6 branch
         run: |
@@ -92,12 +90,7 @@ jobs:
         run: |
           python update_flopy.py
 
-      - name: Print python package versions
-        run: |
-          pip list
-
       - name: Build and zip applications
-        shell: bash
         working-directory: modflow6/distribution
         run: |
           python build_nightly.py

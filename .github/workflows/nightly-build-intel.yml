@@ -156,7 +156,6 @@ jobs:
 
       - name: Install TeX Live
         if: runner.os == 'Linux'
-        shell: bash
         run: |
           sudo apt-get update
           sudo apt install texlive-latex-extra texlive-science texlive-font-utils
@@ -205,7 +204,6 @@ jobs:
 
       - name: Move the LaTeX document
         if: runner.os == 'Linux'
-        shell: bash
         run: |
           ls -la ./modflow6/doc/mf6io/
           mv ./modflow6/doc/mf6io/mf6io.pdf mf6io.pdf
@@ -228,7 +226,6 @@ jobs:
 
       - name: exclude unused files from cache on windows
         if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
-        shell: bash
         run: |
           .github/intel-scripts/cache_exclude_windows.sh
 
@@ -242,6 +239,9 @@ jobs:
     name: Make a nightly release
     needs: build_for_os
     runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
 
     if:
       github.event_name == 'push' || github.event_name == 'schedule'
@@ -262,7 +262,6 @@ jobs:
           path: ./nightly/
 
       - name: List files in the artifact directory
-        shell: bash
         run: |
           pwd
           ls -l ./nightly/
