@@ -1,0 +1,83 @@
+name: Cache Intel fortran
+description: Cache Intel fortran installation (cross-platform)
+runs:
+  using: composite
+  steps:
+    - name: Set install path (Linux & MacOS)
+      if: runner.os != 'Windows'
+      id: set-install-path
+      shell: bash
+      run: |
+        echo "::set-output name=install-path::/opt/intel/oneapi"
+
+    - name: Set resources (Linux)
+      id: set-resources-linux
+      shell: bash
+      run: |
+        echo "::set-output name=hpckit_url::https://registrationcenter-download.intel.com/akdlm/irc_nas/18679/l_HPCKit_p_2022.2.0.191_offline.sh"
+        echo "::set-output name=fortran::intel.oneapi.lin.ifort-compiler"
+
+    - name: Cache ifort (Linux)
+      if: runner.os == 'Linux'
+      id: cache-install-linux
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.set-install-path.outputs.install-path }}
+        key: ifort-${{ runner.os }}-${{ hashFiles('**/.github/actions/cache_ifort/action.yml', '**/.github/intel-scripts/cache_exclude_linux.sh') }}
+
+    - name: Install ifort (Linux)
+      if: runner.os == 'Linux' && steps.cache-install-linux.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        .github/intel-scripts/install_linux.sh $HPCKIT_URL $FORTRAN
+      env:
+        HPCKIT_URL: ${{ steps.set-resources-linux.outputs.hpckit_url }}
+        FORTRAN: ${{ steps.set-resources-linux.outputs.fortran }}
+
+    - name: Set resources (Mac)
+      id: set-resources-macos
+      shell: bash
+      run: |
+        echo "::set-output name=hpckit_url::https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18681/m_HPCKit_p_2022.2.0.158_offline.dmg"
+        echo "::set-output name=fortran::intel.oneapi.mac.ifort-compiler"
+
+    - name: Cache ifort (MacOS)
+      if: runner.os == 'macOS'
+      id: cache-install-macos
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.set-install-path.outputs.install-path }}
+        key: ifort-${{ runner.os }}-${{ hashFiles('**/.github/actions/cache_ifort/action.yml') }}
+
+    - name: Install ifort (MacOS)
+      if: runner.os == 'macOS' && steps.cache-install-macos.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        .github/intel-scripts/install_macos.sh $HPCKIT_URL $FORTRAN_COMPONENTS
+      env:
+        HPCKIT_URL: ${{ steps.set-resources-macos.outputs.hpckit_url }}
+        FORTRAN: ${{ steps.set-resources-macos.outputs.fortran }}
+
+    - name: Set resources (Windows)
+      id: set-resources-windows
+      shell: pwsh
+      run: |
+        echo "::set-output name=hpckit_url::https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18680/w_HPCKit_p_2022.2.0.173_offline.exe"
+        echo "::set-output name=fortran::intel.oneapi.win.ifort-compiler"
+
+    - name: Cache ifort (Windows)
+      if: runner.os == 'Windows'
+      id: cache-install-windows
+      uses: actions/cache@v3
+      with:
+        path: C:\Program Files (x86)\Intel\oneAPI
+        key: ifort-${{ runner.os }}-${{ hashFiles('**/.github/actions/cache_ifort/action.yml', '**/.github/intel-scripts/cache_exclude_windows.sh') }}
+
+    - name: Install ifort (Windows)
+      if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
+      shell: pwsh
+      run: |
+        .github/intel-scripts/install_windows.bat $env:HPCKIT_URL $env:FORTRAN
+      env:
+        HPCKIT_URL: ${{ steps.set-resources-windows.outputs.hpckit_url }}
+        FORTRAN: ${{ steps.set-resources-windows.outputs.fortran }}

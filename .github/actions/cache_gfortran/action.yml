@@ -1,0 +1,74 @@
+name: Cache gfortran
+description: Cache gfortran installation (cross-platform)
+runs:
+  using: composite
+  steps:
+    - name: Cache gfortran (Linux)
+      if: runner.os == 'Linux'
+      id: cache-install-linux
+      uses: actions/cache@v3
+      with:
+        path: |
+          /usr/bin/gfortran-10
+          /usr/bin/gcc-10
+          /usr/bin/g++-10
+        key: gfortran-${{ runner.os }}-${{ hashFiles('**/.github/actions/cache_gfortran/action.yml') }}
+
+    - name: Symlink to gfortran (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo ln -fs /usr/bin/gfortran-10 /usr/local/bin/gfortran
+        sudo ln -fs /usr/bin/gcc-10 /usr/local/bin/gcc
+        sudo ln -fs /usr/bin/g++-10 /usr/local/bin/g++
+
+    - name: Cache gfortran (MacOS)
+      if: runner.os == 'macOS'
+      id: cache-install-macos
+      uses: actions/cache@v3
+      with:
+        path: |
+          /usr/local/bin/gfortran-11
+          /usr/local/bin/gcc-11
+          /usr/local/bin/g++-11
+        key: gfortran-${{ runner.os }}-${{ hashFiles('**/.github/actions/cache_gfortran/action.yml') }}
+
+    - name: Symlink to gfortran (MacOS)
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        sudo ln -fs /usr/local/bin/gfortran-11 /usr/local/bin/gfortran
+        sudo ln -fs /usr/local/bin/gcc-11 /usr/local/bin/gcc
+        sudo ln -fs /usr/local/bin/g++-11 /usr/local/bin/g++
+
+    - name: Cache gfortran (Windows)
+      if: runner.os == 'Windows'
+      id: cache-install-windows
+      uses: actions/cache@v3
+      with:
+        path: |
+          # TODO: where is windows install?
+          /c/ProgramData/Chocolatey/
+        key: gfortran-${{ runner.os }}-${{ hashFiles('**/.github/actions/cache_gfortran/action.yml', '**/.github/common/link-gfortranlib5.sh') }}
+
+    - name: Workaround for windows-2022 v20220626.1 gfortran executable run failures
+      if: runner.os == 'Windows'
+      shell: bash
+      run: |
+        .github/common/link-gfortranlib5.sh
+
+    - name: Print GNU compiler versions
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        gfortran --version
+        gcc --version
+        g++ --version
+
+    - name: Print GNU compiler versions (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        gfortran --version
+        gcc --version
+        g++ --version
