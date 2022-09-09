@@ -1,9 +1,0 @@
-numpy
-matplotlib
-pyshp
-ipython
-pandas
-shapely
-scipy
-jupyter
-jupytext

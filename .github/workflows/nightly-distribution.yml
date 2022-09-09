@@ -42,26 +42,21 @@ jobs:
       FC: ifort
 
     steps:
-      - name: Checkout this github repo
-        uses: actions/checkout@v2.3.4
-
-      - name: Install ifort
-        uses: ./.github/actions/cache_ifort
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       - name: Setup Python
         uses: actions/setup-python@v4.0.0
         with:
           python-version: 3.9
 
-      - name: Install python packages
+      - name: Install Python packages
         run: |
-          .github/common/install-python-std.sh
-          pip install -r ./etc/requirements.pip.txt
-          pip install -r ./etc/requirements.usgs.txt
-
-      - name: Print python package versions
-        run: |
+          pip install -r requirements.txt
           pip list
+
+      - name: Install ifort
+        uses: modflowpy/install-intelfortran-action@v1
 
       - name: install dos2unix on linux
         if: runner.os == 'Linux'
@@ -102,14 +97,12 @@ jobs:
       - name: Create MODFLOW 6 distribution (Linux/Mac)
         if: runner.os == 'Linux' || runner.os == 'macOS'
         run: |
-          source /opt/intel/oneapi/setvars.sh
           python make_distribution.py -mf6p ./modflow6 -mf6ep ./modflow6-examples -dp ./${{ runner.os }}
 
       - name: Create MODFLOW 6 distribution (Windows)
         if: runner.os == 'Windows'
         shell: cmd
         run: |
-          call ".github/intel-scripts/build_windows.bat"
           python make_distribution.py -mf6p ./modflow6 -mf6ep ./modflow6-examples -dp ./${{ runner.os }}
         env:
           VS_VER: vs2022
