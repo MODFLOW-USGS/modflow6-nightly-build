@@ -20,6 +20,9 @@ on:
     branches:
       - master
 
+env:
+  FC: ifort
+
 jobs:
   build_for_os:
     name: build distribution
@@ -37,9 +40,6 @@ jobs:
     defaults:
       run:
         shell: bash
-
-    env:
-      FC: ifort
 
     steps:
       - name: Checkout repo
@@ -74,40 +74,35 @@ jobs:
           cd ./usgslatex/usgsLaTeX
           sudo ./install.sh --all-users
 
-      - name: Clone MODFLOW 6 repos
-        run: |
-          git clone --depth 1 https://github.com/MODFLOW-USGS/modflow6.git modflow6
-          git clone --depth 1 https://github.com/MODFLOW-USGS/modflow6-examples.git modflow6-examples
+      - name: Checkout modflow6
+        uses: actions/checkout@v3
+        with:
+          repository: MODFLOW-USGS/modflow6
+          path: modflow6
 
-      - name: Determine MODFLOW 6 branch
-        run: |
-          pwd
-          cd ./modflow6/
-          pwd
-          git branch
-          cd ../
-          pwd
-          ls ./
+      - name: Checkout modflow6 examples
+        uses: actions/checkout@v3
+        with:
+          repository: MODFLOW-USGS/modflow6-examples
+          path: modflow6-examples
 
-      - name: Update flopy MODFLOW 6 classes
+      - name: Update flopy classes
         working-directory: modflow6/autotest
         run: |
           python update_flopy.py
 
-      - name: Create MODFLOW 6 distribution (Linux/Mac)
-        if: runner.os == 'Linux' || runner.os == 'macOS'
+      - name: Create distribution
+        if: runner.os != 'Windows'
         run: |
           python make_distribution.py -mf6p ./modflow6 -mf6ep ./modflow6-examples -dp ./${{ runner.os }}
 
-      - name: Create MODFLOW 6 distribution (Windows)
+      - name: Create distribution (Windows)
         if: runner.os == 'Windows'
-        shell: cmd
         run: |
+          export PATH="/C/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.33.31629/bin/Hostx64/x64":$PATH
           python make_distribution.py -mf6p ./modflow6 -mf6ep ./modflow6-examples -dp ./${{ runner.os }}
-        env:
-          VS_VER: vs2022
 
-      - name: Create an artifact of the distributions
+      - name: Create distribution artifact
         uses: actions/upload-artifact@v3.1.0
         with:
           name: ${{ runner.os }}
