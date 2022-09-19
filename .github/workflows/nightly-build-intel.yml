@@ -20,6 +20,9 @@ on:
     branches:
       - master
 
+env:
+  FC: ifort
+
 jobs:
   build_for_os:
     name: compile code
@@ -38,18 +41,8 @@ jobs:
       run:
         shell: bash
 
-    env:
-      WINDOWS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18680/w_HPCKit_p_2022.2.0.173_offline.exe
-      LINUX_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18679/l_HPCKit_p_2022.2.0.191_offline.sh
-      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18681/m_HPCKit_p_2022.2.0.158_offline.dmg
-      WINDOWS_FORTRAN_COMPONENTS: intel.oneapi.win.ifort-compiler
-      LINUX_FORTRAN_COMPONENTS_WEB: intel.oneapi.lin.ifort-compiler
-      MACOS_FORTRAN_COMPONENTS: intel.oneapi.mac.ifort-compiler
-      FC: ifort
-      VS_VER: vs2022
-
     steps:
-      - name: Checkout this github repo
+      - name: Checkout repo
         uses: actions/checkout@v2.3.4
 
       - name: Setup Python
@@ -57,86 +50,36 @@ jobs:
         with:
           python-version: 3.9
 
-      - name: Install python packages
+      - name: Install Python packages
         run: |
-          .github/common/install-python-std.sh
-
-      - name: Print python package versions
-        run: |
+          pip install -r requirements.txt
           pip list
 
-      - name: cache install ifort on linux
-        if: runner.os == 'Linux'
-        id: cache-install-linux
-        uses: actions/cache@v2
+      - name: Install ifort
+        uses: modflowpy/install-intelfortran-action@v1
+
+      - name: Checkout modflow6
+        uses: actions/checkout@v3
         with:
-          path: |
-            /opt/intel/oneapi
-          key: install-${{ env.LINUX_HPCKIT_URL }}-${{ env.LINUX_FORTRAN_COMPONENTS_WEB }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_linux.sh') }}
+          repository: MODFLOW-USGS/modflow6
+          path: modflow6
 
-      - name: install ifort on linux
-        if: runner.os == 'Linux' && steps.cache-install-linux.outputs.cache-hit != 'true'
-        run: |
-          .github/intel-scripts/install_linux.sh $LINUX_HPCKIT_URL $LINUX_FORTRAN_COMPONENTS_WEB
-
-      - name: cache install ifort on macos
-        if: runner.os == 'macOS'
-        id: cache-install-macos
-        uses: actions/cache@v2
-        with:
-          path: /opt/intel/oneapi
-          key: install-${{ env.MACOS_HPCKIT_URL }}-${{ env.MACOS_FORTRAN_COMPONENTS }}
-
-      - name: install ifort on macos
-        if: runner.os == 'macOS' && steps.cache-install-macos.outputs.cache-hit != 'true'
-        run: |
-          .github/intel-scripts/install_macos.sh $MACOS_HPCKIT_URL $MACOS_FORTRAN_COMPONENTS
-
-      - name: cache install ifort on windows
-        if: runner.os == 'Windows'
-        id: cache-install-windows
-        uses: actions/cache@v2
-        with:
-          path: C:\Program Files (x86)\Intel\oneAPI
-          key: install-${{ env.WINDOWS_HPCKIT_URL }}-${{ env.WINDOWS_FORTRAN_COMPONENTS }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_windows.sh') }}
-
-      - name: install ifort on windows
-        if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
-        run: |
-          .github/intel-scripts/install_windows.bat $WINDOWS_HPCKIT_URL $WINDOWS_FORTRAN_COMPONENTS
-
-      - name: Clone MODFLOW 6 repo
-        run: |
-          git clone https://github.com/MODFLOW-USGS/modflow6.git modflow6
-
-      - name: Determine MODFLOW 6 branch
-        run: |
-          pwd
-          cd ./modflow6/
-          pwd
-          git branch
-          cd ../
-          pwd
-          ls ./
-
-      - name: Update flopy MODFLOW 6 classes
+      - name: Update flopy classes
         working-directory: modflow6/autotest
         run: |
           python update_flopy.py
 
-      - name: Build and zip applications on linux and MacOS
-        if: runner.os == 'Linux' || runner.os == 'macOS'
+      - name: Build and zip
+        if: runner.os != 'Windows'
         working-directory: modflow6/distribution
         run: |
-          source /opt/intel/oneapi/setvars.sh
           python build_nightly.py
 
-      - name: Build and zip applications on Windows
+      - name: Build and zip (Windows)
         if: runner.os == 'Windows'
         working-directory: modflow6/distribution
-        shell: cmd
         run: |
-          call "../../.github/intel-scripts/build_windows.bat"
+          export PATH="/C/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.33.31629/bin/Hostx64/x64":$PATH
           python build_nightly.py
 
       - name: Move the build zip file
@@ -145,7 +88,6 @@ jobs:
           mv ./modflow6/distribution/temp_zip/${{ matrix.artifact_name }} ./${{ matrix.artifact_name }}
           ls -l ./
 
-      # Build LaTeX document
       - name: Copy the modflow6/docs directory
         if: runner.os == 'Linux'
         shell: python
@@ -224,16 +166,6 @@ jobs:
           name: nightly
           path: |
             ./mf6io.pdf
-
-      - name: exclude unused files from cache on windows
-        if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
-        run: |
-          .github/intel-scripts/cache_exclude_windows.sh
-
-      - name: exclude unused files from cache on linux
-        if: runner.os == 'Linux' && steps.cache-install-linux.outputs.cache-hit != 'true'
-        run: |
-          .github/intel-scripts/cache_exclude_linux.sh
 
   # make the release if previous job was successful
   release:

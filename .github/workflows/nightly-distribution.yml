@@ -20,6 +20,9 @@ on:
     branches:
       - master
 
+env:
+  FC: ifort
+
 jobs:
   build_for_os:
     name: build distribution
@@ -38,74 +41,22 @@ jobs:
       run:
         shell: bash
 
-    env:
-      WINDOWS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18680/w_HPCKit_p_2022.2.0.173_offline.exe
-      LINUX_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/irc_nas/18679/l_HPCKit_p_2022.2.0.191_offline.sh
-      MACOS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18681/m_HPCKit_p_2022.2.0.158_offline.dmg
-      WINDOWS_FORTRAN_COMPONENTS: intel.oneapi.win.ifort-compiler
-      LINUX_FORTRAN_COMPONENTS_WEB: intel.oneapi.lin.ifort-compiler
-      MACOS_FORTRAN_COMPONENTS: intel.oneapi.mac.ifort-compiler
-      FC: ifort
-      VS_VER: vs2022
-
     steps:
-      - name: Checkout this github repo
-        uses: actions/checkout@v2.3.4
-
-      - name: cache install ifort on linux
-        if: runner.os == 'Linux'
-        id: cache-install-linux
-        uses: actions/cache@v2
-        with:
-          path: |
-            /opt/intel/oneapi
-          key: install-${{ env.LINUX_HPCKIT_URL }}-${{ env.LINUX_FORTRAN_COMPONENTS_WEB }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_linux.sh') }}
-
-      - name: install ifort on linux
-        if: runner.os == 'Linux' && steps.cache-install-linux.outputs.cache-hit != 'true'
-        run: |
-          .github/intel-scripts/install_linux.sh $LINUX_HPCKIT_URL $LINUX_FORTRAN_COMPONENTS_WEB
-
-      - name: cache install ifort on macos
-        if: runner.os == 'macOS'
-        id: cache-install-macos
-        uses: actions/cache@v2
-        with:
-          path: /opt/intel/oneapi
-          key: install-${{ env.MACOS_HPCKIT_URL }}-${{ env.MACOS_FORTRAN_COMPONENTS }}
-
-      - name: install ifort on macos
-        if: runner.os == 'macOS' && steps.cache-install-macos.outputs.cache-hit != 'true'
-        run: |
-          .github/intel-scripts/install_macos.sh $MACOS_HPCKIT_URL $MACOS_FORTRAN_COMPONENTS
-
-      - name: cache install ifort on windows
-        if: runner.os == 'Windows'
-        id: cache-install-windows
-        uses: actions/cache@v2
-        with:
-          path: C:\Program Files (x86)\Intel\oneAPI
-          key: install-${{ env.WINDOWS_HPCKIT_URL }}-${{ env.WINDOWS_FORTRAN_COMPONENTS }}-compiler-${{ hashFiles('**/.github/intel-scripts/cache_exclude_windows.sh') }}
-
-      - name: install ifort on windows
-        if: runner.os == 'Windows' && steps.cache-install-windows.outputs.cache-hit != 'true'
-        run: |
-          .github/intel-scripts/install_windows.bat $WINDOWS_HPCKIT_URL $WINDOWS_FORTRAN_COMPONENTS
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       - name: Setup Python
         uses: actions/setup-python@v4.0.0
         with:
           python-version: 3.9
 
-      - name: Install python packages
+      - name: Install Python packages
         run: |
-          .github/common/install-python-std.sh
-          pip install -r ./etc/requirements.pip.txt
-          pip install -r ./etc/requirements.usgs.txt
-
-      - name: Print python package versions
-        run: |
+          pip install -r requirements.txt
           pip list
+
+      - name: Install ifort
+        uses: modflowpy/install-intelfortran-action@v1
 
       - name: install dos2unix on linux
         if: runner.os == 'Linux'
@@ -123,40 +74,35 @@ jobs:
           cd ./usgslatex/usgsLaTeX
           sudo ./install.sh --all-users
 
-      - name: Clone MODFLOW 6 repos
-        run: |
-          git clone --depth 1 https://github.com/MODFLOW-USGS/modflow6.git modflow6
-          git clone --depth 1 https://github.com/MODFLOW-USGS/modflow6-examples.git modflow6-examples
+      - name: Checkout modflow6
+        uses: actions/checkout@v3
+        with:
+          repository: MODFLOW-USGS/modflow6
+          path: modflow6
 
-      - name: Determine MODFLOW 6 branch
-        run: |
-          pwd
-          cd ./modflow6/
-          pwd
-          git branch
-          cd ../
-          pwd
-          ls ./
+      - name: Checkout modflow6 examples
+        uses: actions/checkout@v3
+        with:
+          repository: MODFLOW-USGS/modflow6-examples
+          path: modflow6-examples
 
-      - name: Update flopy MODFLOW 6 classes
+      - name: Update flopy classes
         working-directory: modflow6/autotest
         run: |
           python update_flopy.py
 
-      - name: Create MODFLOW 6 distribution (Linux/Mac)
-        if: runner.os == 'Linux' || runner.os == 'macOS'
+      - name: Create distribution
+        if: runner.os != 'Windows'
         run: |
-          source /opt/intel/oneapi/setvars.sh
           python make_distribution.py -mf6p ./modflow6 -mf6ep ./modflow6-examples -dp ./${{ runner.os }}
 
-      - name: Create MODFLOW 6 distribution (Windows)
+      - name: Create distribution (Windows)
         if: runner.os == 'Windows'
-        shell: cmd
         run: |
-          call ".github/intel-scripts/build_windows.bat"
+          export PATH="/C/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.33.31629/bin/Hostx64/x64":$PATH
           python make_distribution.py -mf6p ./modflow6 -mf6ep ./modflow6-examples -dp ./${{ runner.os }}
 
-      - name: Create an artifact of the distributions
+      - name: Create distribution artifact
         uses: actions/upload-artifact@v3.1.0
         with:
           name: ${{ runner.os }}

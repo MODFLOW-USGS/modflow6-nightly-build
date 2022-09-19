@@ -34,63 +34,29 @@ jobs:
         shell: bash
 
     steps:
-      - name: Checkout this github repo
-        uses: actions/checkout@v2.3.4
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       - name: Setup Python
         uses: actions/setup-python@v4.0.0
         with:
           python-version: 3.9
 
-      - name: Install python packages
+      - name: Install Python packages
         run: |
-          .github/common/install-python-std.sh
-
-      - name: Print python package versions
-        run: |
+          pip install -r requirements.txt
           pip list
 
-      - name: Workaround for windows-2022 v20220626.1 gfortran executable run failures
-        if: runner.os == 'Windows'
-        run: |
-          .github/common/link-gfortranlib5.sh
+      - name: Install gfortran
+        uses: modflowpy/install-gfortran-action@v1
 
-      - name: Setup symbolic link to gfortran on Linux
-        if: runner.os == 'Linux'
-        run: |
-          sudo ln -fs /usr/bin/gfortran-10 /usr/local/bin/gfortran
-          sudo ln -fs /usr/bin/gcc-10 /usr/local/bin/gcc
-          sudo ln -fs /usr/bin/g++-10 /usr/local/bin/g++
+      - name: Checkout modflow6
+        uses: actions/checkout@v3
+        with:
+          repository: MODFLOW-USGS/modflow6
+          path: modflow6
 
-      - name: Setup symbolic link to gfortran on macOS
-        if: runner.os == 'macOS'
-        run: |
-          sudo ln -fs /usr/local/bin/gfortran-11 /usr/local/bin/gfortran
-          sudo ln -fs /usr/local/bin/gcc-11 /usr/local/bin/gcc
-          sudo ln -fs /usr/local/bin/g++-11 /usr/local/bin/g++
-
-      - name: Print GNU compiler versions
-        shell: bash
-        run: |
-          gfortran --version
-          gcc --version
-          g++ --version
-
-      - name: Clone MODFLOW 6 repo
-        run: |
-          git clone https://github.com/MODFLOW-USGS/modflow6.git modflow6
-
-      - name: Determine MODFLOW 6 branch
-        run: |
-          pwd
-          cd ./modflow6/
-          pwd
-          git branch
-          cd ../
-          pwd
-          ls ./
-
-      - name: Update flopy MODFLOW 6 classes
+      - name: Update flopy classes
         working-directory: modflow6/autotest
         run: |
           python update_flopy.py
@@ -105,4 +71,3 @@ jobs:
           ls -l ./modflow6/distribution/*
           mv ./modflow6/distribution/temp_zip/${{ matrix.artifact_name }} ./${{ matrix.artifact_name }}
           ls -l ./
-
