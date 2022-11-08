@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v3
 
       - name: Setup Python
         uses: actions/setup-python@v4.0.0
@@ -63,6 +63,7 @@ jobs:
         with:
           repository: MODFLOW-USGS/modflow6
           path: modflow6
+          ref: develop
 
       - name: Update flopy classes
         working-directory: modflow6/autotest
@@ -78,8 +79,8 @@ jobs:
       - name: Build and zip (Windows)
         if: runner.os == 'Windows'
         working-directory: modflow6/distribution
+        shell: pwsh
         run: |
-          export PATH="/C/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.33.31629/bin/Hostx64/x64":$PATH
           python build_nightly.py
 
       - name: Move the build zip file
