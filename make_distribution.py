@@ -221,7 +221,7 @@ def set_modflow6_release_info(modflow6_path):
     releaseCandidate = None
     developMode = None
 
-    cmd = ["python", "make_release.py"]
+    cmd = ["python", "update_version.py"]
     if isApproved is not None:
         cmd.append("--isApproved")
     if version is not None:

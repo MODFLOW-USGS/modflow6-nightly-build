@@ -1,10 +1,13 @@
 # PyPI dependencies
 appdirs
+filelock
+flaky
 ipython
 jupyter
 jupytext
 matplotlib
 meson!=0.63.0
+modflow-devtools
 ninja
 numpy
 pandas

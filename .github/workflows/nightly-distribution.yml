@@ -1,28 +1,16 @@
-# Parts of configuration file are based on the examples in this repository:
-# https://github.com/oneapi-src/oneapi-ci
-#
-# Which have the following copyright:
-# SPDX-FileCopyrightText: 2020 Intel Corporation
-#
-# SPDX-License-Identifier: MIT
-
 name: MODFLOW 6 distribution (nightly build with Intel)
-
 on:
   schedule:
     - cron: '0 2 * * *' # run at 2 AM UTC
-    # - cron: '*/10 * * * *' # run every 10 minutes
-    # - cron: '20 */1 * * *' # run every hour at 20 minutes past the hour
   push:
     branches:
       - master
+      - ci-diagnose*
   pull_request:
     branches:
       - master
-
 env:
   FC: ifort
-
 jobs:
   build_for_os:
     name: build distribution
@@ -30,18 +18,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-20.04
-            artifact_name: Linux.zip
-          - os: macos-latest
-            artifact_name: macOS.zip
-          - os: windows-latest
-            artifact_name: Windows.zip
+        os: [ubuntu-20.04, macos-latest, windows-latest]
     defaults:
       run:
         shell: bash
-
     steps:
+
       - name: Checkout repo
         uses: actions/checkout@v3
 
@@ -57,12 +39,6 @@ jobs:
 
       - name: Install ifort
         uses: modflowpy/install-intelfortran-action@v1
-
-      - name: install dos2unix on linux
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get install dos2unix
-          dos2unix --version
 
       - name: Install TeX Live and usgslatex
         if: runner.os == 'Linux'
@@ -89,19 +65,10 @@ jobs:
 
       - name: Update flopy classes
         working-directory: modflow6/autotest
-        run: |
-          python update_flopy.py
+        run: python update_flopy.py
 
       - name: Create distribution
-        if: runner.os != 'Windows'
-        run: |
-          python make_distribution.py -mf6p ./modflow6 -mf6ep ./modflow6-examples -dp ./${{ runner.os }}
-
-      - name: Create distribution (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          export PATH="/C/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.33.31629/bin/Hostx64/x64":$PATH
-          python make_distribution.py -mf6p ./modflow6 -mf6ep ./modflow6-examples -dp ./${{ runner.os }}
+        run: python make_distribution.py -mf6p ./modflow6 -mf6ep ./modflow6-examples -dp ./${{ runner.os }}
 
       - name: Create distribution artifact
         uses: actions/upload-artifact@v3.1.0
