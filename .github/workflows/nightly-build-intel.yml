@@ -241,11 +241,12 @@ jobs:
 
       - name: Zip distribution
         if: runner.os != 'Windows'
-        run: zip -r ${{ matrix.artifact_name }}.zip ${{ matrix.artifact_name }} -x '*.DS_Store'
+        run: zip -j -r ${{ matrix.artifact_name }}.zip ${{ matrix.artifact_name }} -x '*.DS_Store'
 
       - name: Zip distribution (Windows)
         if: runner.os == 'Windows'
-        run: 7z a -tzip ${{ matrix.artifact_name }}.zip ${{ matrix.artifact_name }} -xr!libmf6.lib
+        shell: pwsh
+        run: 7z a -tzip ${{ matrix.artifact_name }}.zip ${{ github.workspace }}\${{ matrix.artifact_name }} -xr'!libmf6.lib'
 
       - name: Upload distribution
         uses: actions/upload-artifact@v3
@@ -308,6 +309,10 @@ jobs:
           draft: false
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      # remove all but zip and pdf files
+      - name: Prune release assets
+        run: find nightly -type f ! -name '*.zip' ! -name '*.pdf' -delete
 
       - name: Upload release assets
         uses: svenstaro/upload-release-action@2.3.0
