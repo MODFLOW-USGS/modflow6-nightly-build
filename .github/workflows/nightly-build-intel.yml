@@ -49,12 +49,18 @@ jobs:
       - name: Setup Intel Fortran
         uses: modflowpy/install-intelfortran-action@v1
 
+      - name: Update version timestamps
+        run: python modflow6/distribution/update_version.py
+
       - name: Build binaries
         working-directory: modflow6
         run: |
           meson setup builddir -Ddebug=false --prefix=$(pwd) --libdir=bin
           meson install -C builddir
           meson test --verbose --no-rebuild -C builddir
+
+      - name: Move code.json
+        run: cp modflow6/code.json modflow6/bin/code.json
 
       - name: Upload binaries
         uses: actions/upload-artifact@v3
@@ -201,7 +207,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: bin-${{ runner.os }}
-          path: modflow6/bin
+          path: ${{ matrix.artifact_name }}/bin
 
       - name: Update FloPy classes
         working-directory: modflow6/autotest
@@ -237,7 +243,7 @@ jobs:
           mkdir -p modflow6-examples
           
           # build the dist
-          python modflow6/distribution/build_dist.py -d -o ${{ matrix.artifact_name }}/bin
+          python modflow6/distribution/build_dist.py -d -o ${{ matrix.artifact_name }}
 
       - name: Zip distribution
         if: runner.os != 'Windows'
@@ -246,7 +252,7 @@ jobs:
       - name: Zip distribution (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: 7z a -tzip ${{ matrix.artifact_name }}.zip ${{ github.workspace }}\${{ matrix.artifact_name }} -xr'!libmf6.lib'
+        run: 7z a -tzip ${{ matrix.artifact_name }}.zip ${{ github.workspace }}\${{ matrix.artifact_name }}\bin\* -xr'!libmf6.lib'
 
       - name: Upload distribution
         uses: actions/upload-artifact@v3
