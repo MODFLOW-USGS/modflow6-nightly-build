@@ -1,62 +1,35 @@
-# Parts of configuration file are based on the examples in this repository:
-# https://github.com/oneapi-src/oneapi-ci
-#
-# Which have the following copyright:
-# SPDX-FileCopyrightText: 2020 Intel Corporation
-#
-# SPDX-License-Identifier: MIT
-
 name: MODFLOW 6 intel nightly build
-
 on:
   schedule:
     - cron: '0 2 * * *' # run at 2 AM UTC
-    # - cron: '*/10 * * * *' # run every 10 minutes
-    # - cron: '20 */1 * * *' # run every hour at 20 minutes past the hour
   push:
     branches:
       - master
+      - develop*
+      - ci-diagnose*
   pull_request:
     branches:
       - master
-
 env:
   FC: ifort
-
 jobs:
-  build_for_os:
-    name: compile code
+  build:
+    name: Build binaries
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-20.04
-            artifact_name: linux.zip
-          - os: macos-latest
-            artifact_name: mac.zip
-          - os: windows-latest
-            artifact_name: win64.zip
-    defaults:
-      run:
-        shell: bash
-
+          - os: ubuntu-22.04
+            artifact_name: linux
+          - os: macos-12
+            artifact_name: mac
+          - os: windows-2022
+            artifact_name: win64
     steps:
+
       - name: Checkout repo
         uses: actions/checkout@v3
-
-      - name: Setup Python
-        uses: actions/setup-python@v4.0.0
-        with:
-          python-version: 3.9
-
-      - name: Install Python packages
-        run: |
-          pip install -r requirements.txt
-          pip list
-
-      - name: Install ifort
-        uses: modflowpy/install-intelfortran-action@v1
 
       - name: Checkout modflow6
         uses: actions/checkout@v3
@@ -65,122 +38,246 @@ jobs:
           path: modflow6
           ref: develop
 
-      - name: Update flopy classes
-        working-directory: modflow6/autotest
-        run: |
-          python update_flopy.py
+      - name: Setup Python
+        uses: actions/setup-python@v4.0.0
+        with:
+          python-version: 3.9
 
-      - name: Build and zip
-        if: runner.os != 'Windows'
-        working-directory: modflow6/distribution
-        run: |
-          python build_nightly.py
+      - name: Install Python packages
+        run: pip install -r requirements.txt
 
-      - name: Build and zip (Windows)
-        if: runner.os == 'Windows'
-        working-directory: modflow6/distribution
-        shell: pwsh
-        run: |
-          python build_nightly.py
+      - name: Setup Intel Fortran
+        uses: modflowpy/install-intelfortran-action@v1
 
-      - name: Move the build zip file
-        run: |
-          ls -l ./modflow6/distribution/*
-          mv ./modflow6/distribution/temp_zip/${{ matrix.artifact_name }} ./${{ matrix.artifact_name }}
-          ls -l ./
+      - name: Update version timestamps
+        run: python modflow6/distribution/update_version.py
 
-      - name: Copy the modflow6/docs directory
-        if: runner.os == 'Linux'
-        shell: python
+      - name: Build binaries
+        working-directory: modflow6
         run: |
-          import shutil
-          src = "/home/runner/work/modflow6-nightly-build/modflow6-nightly-build/modflow6/doc/"
-          dst = "./doc/"
-          shutil.copytree(src, dst)
+          meson setup builddir -Ddebug=false --prefix=$(pwd) --libdir=bin
+          meson install -C builddir
+          meson test --verbose --no-rebuild -C builddir
+
+      - name: Move code.json
+        run: cp modflow6/code.json modflow6/bin/code.json
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: bin-${{ runner.os }}
+          path: modflow6/bin
+
+  docs:
+    name: Build documentation
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Checkout modflow6
+        uses: actions/checkout@v3
+        with:
+          repository: MODFLOW-USGS/modflow6
+          path: modflow6
+          ref: develop
+
+      - name: Setup Python
+        uses: actions/setup-python@v4.0.0
+        with:
+          python-version: 3.9
+
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+
+      - name: Checkout usgslatex
+        uses: actions/checkout@v3
+        with:
+          repository: MODFLOW-USGS/usgslatex
+          path: usgslatex
 
       - name: Install TeX Live
-        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt install texlive-latex-extra texlive-science texlive-font-utils
-
-      - name: Clone USGS LaTeX repo
-        if: runner.os == 'Linux'
-        run: |
-          git clone https://github.com/MODFLOW-USGS/usgslatex.git usgslatex
+          sudo apt install texlive-latex-extra \
+            texlive-science \
+            texlive-font-utils \
+            texlive-fonts-recommended \
+            texlive-fonts-extra \
+            dos2unix
 
       - name: Install USGS LaTeX style files and Univers font
-        if: runner.os == 'Linux'
-        working-directory: ./usgslatex/usgsLaTeX
-        run: |
-          sudo ./install.sh --all-users
+        working-directory: usgslatex/usgsLaTeX
+        run: sudo ./install.sh --all-users
 
-      - name: Build mf6io latex document
-        if: runner.os == 'Linux'
-        shell: python
+      - name: Download binaries
+        uses: actions/download-artifact@v3
+        with:
+          name: bin-${{ runner.os }}
+          path: modflow6/bin
+
+      - name: Checkout modflow6-examples
+        uses: actions/checkout@v3
+        with:
+          repository: MODFLOW-USGS/modflow6-examples
+          path: modflow6-examples
+
+      - name: Cache modflow6 examples
+        id: cache-examples
+        uses: actions/cache@v3
+        with:
+          path: modflow6-examples/examples
+          key: modflow6-examples-${{ hashFiles('modflow6-examples/scripts/**') }}
+
+      - name: Install extra Python packages
+        if: steps.cache-examples.outputs.cache-hit != 'true'
+        working-directory: modflow6-examples/etc
+        run: pip install -r requirements.pip.txt
+
+      - name: Build example models
+        if: steps.cache-examples.outputs.cache-hit != 'true'
+        working-directory: modflow6-examples/etc
+        run: python ci_build_files.py
+
+      - name: Build docs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          import sys
-          import subprocess
+          # example path below is hard-coded into modflow6/distribution/build_docs.py
+          # once that's fixed, this can be removed
+          mkdir -p modflow6-examples/examples/ex-gwf-twri01
           
-          ws = "./modflow6/doc/mf6io/"
-          bibnam = "mf6io"
-          texnam = bibnam + ".tex"
-          cmds = [
-                  ["pdflatex", texnam],
-                  ["bibtex", bibnam],
-                  ["pdflatex", texnam],
-                  ["pdflatex", texnam],
-                 ]
-          for cmd in cmds:
-              print("running command...'{}'".format(" ".join(cmd)))
-              with subprocess.Popen(cmd,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT,
-                                    cwd=ws) as process:
-                  stdout, stderr = process.communicate(timeout=10)
-                  if stdout:
-                      stdout = stdout.decode()
-                      print(stdout)
-                  if stderr:
-                      print("\n\nError condition occurred:\n")
-                      stderr = stderr.decode()
-                      print(stderr)
+          # execute permission may not have survived upload/download-artifact actions
+          chmod +x modflow6/bin/mf6
+          chmod +x modflow6/bin/mf5to6
+          chmod +x modflow6/bin/zbud6
+          
+          # build the docs
+          python modflow6/distribution/build_docs.py -d -b modflow6/bin -o docs
 
-      - name: Move the LaTeX document
-        if: runner.os == 'Linux'
-        run: |
-          ls -la ./modflow6/doc/mf6io/
-          mv ./modflow6/doc/mf6io/mf6io.pdf mf6io.pdf
-          ls -la ./
-
-      - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v3.1.0
+      - name: Upload docs
+        uses: actions/upload-artifact@v3
         with:
-          name: nightly
-          path: |
-            ./${{ matrix.artifact_name }}
+          name: mf6io
+          path: docs/mf6io.pdf
 
-      - name: Upload additional Build Artifacts
-        if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v3.1.0
-        with:
-          name: nightly
-          path: |
-            ./mf6io.pdf
-
-  # make the release if previous job was successful
-  release:
-    name: Make a nightly release
-    needs: build_for_os
-    runs-on: ubuntu-20.04
+  dist:
+    name: Build distributions
+    needs: docs
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            artifact_name: linux
+          - os: macos-12
+            artifact_name: mac
+          - os: windows-2022
+            artifact_name: win64
     defaults:
       run:
         shell: bash
+    steps:
 
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Checkout modflow6
+        uses: actions/checkout@v3
+        with:
+          repository: MODFLOW-USGS/modflow6
+          path: modflow6
+          ref: develop
+
+      - name: Setup Python
+        uses: actions/setup-python@v4.0.0
+        with:
+          python-version: 3.9
+
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+
+      - name: Setup Intel Fortran
+        uses: modflowpy/install-intelfortran-action@v1
+
+      - name: Download binaries
+        uses: actions/download-artifact@v3
+        with:
+          name: bin-${{ runner.os }}
+          path: ${{ matrix.artifact_name }}/bin
+
+      - name: Update FloPy classes
+        working-directory: modflow6/autotest
+        run: python update_flopy.py
+
+      - name: Checkout modflow6-examples
+        uses: actions/checkout@v3
+        with:
+          repository: MODFLOW-USGS/modflow6-examples
+          path: modflow6-examples
+
+      - name: Cache modflow6 examples
+        id: cache-examples
+        uses: actions/cache@v3
+        with:
+          path: modflow6-examples/examples
+          key: modflow6-examples-${{ hashFiles('modflow6-examples/scripts/**') }}
+
+      - name: Install extra Python packages
+        if: steps.cache-examples.outputs.cache-hit != 'true'
+        working-directory: modflow6-examples/etc
+        run: pip install -r requirements.pip.txt
+
+      - name: Build example models
+        if: steps.cache-examples.outputs.cache-hit != 'true'
+        working-directory: modflow6-examples/etc
+        run: python ci_build_files.py
+
+      - name: Build distribution
+        run: |
+          # modflow6/distribution/build_dist.py expects the examples repo to exist,
+          # but it's not needed for nightly builds, below can be removed when fixed
+          mkdir -p modflow6-examples
+          
+          # build the dist
+          python modflow6/distribution/build_dist.py -d -o ${{ matrix.artifact_name }}
+
+      - name: Zip distribution
+        if: runner.os != 'Windows'
+        run: zip -j -r ${{ matrix.artifact_name }}.zip ${{ matrix.artifact_name }} -x '*.DS_Store'
+
+      - name: Zip distribution (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: 7z a -tzip ${{ matrix.artifact_name }}.zip ${{ github.workspace }}\${{ matrix.artifact_name }}\bin\* -xr'!libmf6.lib'
+
+      - name: Upload distribution
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_name }}.zip
+
+      - name: Upload mf6io docs
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: mf6io
+          path: ${{ matrix.artifact_name }}/doc/mf6io.pdf
+
+  release:
+    name: Create release
+    needs: dist
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
     if:
       github.event_name == 'push' || github.event_name == 'schedule'
-
     steps:
+
       - name: Delete Older Releases
         uses: dev-drprasad/delete-older-releases@v0.2.0
         with:
@@ -189,49 +286,50 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download a Build Artifact
+      - name: Download artifacts
         uses: actions/download-artifact@v3.0.0
         with:
-          name: nightly
-          path: ./nightly/
+          path: nightly
 
       - name: List files in the artifact directory
-        run: |
-          pwd
-          ls -l ./nightly/
+        run: ls -l nightly
 
-      - name: Get Current Time
+      - name: Get time
         uses: josStorer/get-current-time@v2.0.0
         id: current-time
         with:
           format: YYYYMMDD
 
-      - name: Use current time
+      - name: Show time
         env:
           TIME: "${{ steps.current-time.outputs.time }}"
           F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
         run: echo $TIME $F_TIME
 
-      - name: Create a Release
+      - name: Create release
         uses: ncipollo/release-action@v1.10.0
         with:
           tag: ${{ steps.current-time.outputs.formattedTime }}
           name: ${{ steps.current-time.outputs.formattedTime }} nightly build
-          body: "OneAPI version of Intel ifort compiler used to compile executables for all operating systems."
+          body: "MODFLOW 6 nightly development build, compiled with Intel Fortran."
           draft: false
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload compiled executables to the latest GitHub release
+      # remove all but zip and pdf files
+      - name: Prune release assets
+        run: find nightly -type f ! -name '*.zip' ! -name '*.pdf' -delete
+
+      - name: Upload release assets
         uses: svenstaro/upload-release-action@2.3.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./nightly/*
+          file: nightly/**
           tag: ${{ steps.current-time.outputs.formattedTime }}
           overwrite: true
           file_glob: true
 
-      - name: Delete Artifact
-        uses: GeekyEggo/delete-artifact@v1.0.0
-        with:
-          name: nightly
+      # - name: Delete Artifact
+      #   uses: GeekyEggo/delete-artifact@v1.0.0
+      #   with:
+      #     name: nightly
