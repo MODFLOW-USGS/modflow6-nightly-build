@@ -6,7 +6,7 @@ Nightly development build for MODFLOW 6 binaries.
 [![MODFLOW 6 intel nightly build](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-build-intel.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-build-intel.yml)
 [![MODFLOW 6 distribution (nightly build with Intel)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-distribution.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-distribution.yml)
 
-The develop branch of the [MODFLOW 6 repository](https://github.com/MODFLOW-USGS/modflow6) contains bug fixes and new functionality that may be incorporated into the next [approved MODFLOW 6 release](https://www.usgs.gov/software/modflow-6-usgs-modular-hydrologic-model). Each night, at 2 AM UTC, Fortran source code from the development branch is compiled for Windows, macOS, and Ubuntu 18.04.4 LTS using gfortran. The binary executables released [here](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest) represent release candidates for the next approved version of MODFLOW 6 but are considered preliminary or provisional.
+The develop branch of the [MODFLOW 6 repository](https://github.com/MODFLOW-USGS/modflow6) contains bug fixes and new functionality that may be incorporated into the next [approved MODFLOW 6 release](https://www.usgs.gov/software/modflow-6-usgs-modular-hydrologic-model). Each night, Fortran source code from the development branch is compiled on `windows-2022`, `macos-12`, and `ubuntu-22.04` runner images using Intel Fortran. The binary executables released [here](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest) are release candidates for the next approved version of MODFLOW 6 but are considered preliminary or provisional.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -19,16 +19,17 @@ The develop branch of the [MODFLOW 6 repository](https://github.com/MODFLOW-USGS
 
 ## Distribution contents
 
-The compiled codes for the latest nightly build are available as operating specific [release assets](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest) (`win64.zip`, `mac.zip`, and `linux.zip`). Each operating specific release asset includes: 
+The nightly builds are available as operating-system specific [release assets](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest) (`win64.zip`, `mac.zip`, and `linux.zip`). The distribution includes: 
 
-1. **mf6[.exe]** (MODFLOW 6)
-2. **mf5to6[.exe]** (the MODFLOW 5 to 6 converter)
-3. **zbud6[.exe]** (the zone budget utility for MODFLOW 6) 
-4. **libmf6[.dll/so/dylib]** (a dynamic-linked library or shared object version of MODFLOW 6)
+1. **mf6[.exe]**: MODFLOW 6
+2. **mf5to6[.exe]**: the MODFLOW 5 to 6 converter
+3. **zbud6[.exe]**: the zone budget utility for MODFLOW 6)
+4. **libmf6[.dll/so/dylib]**: a dynamic-linked library or shared object version of MODFLOW 6
+5. **code.json**: a JSON file containing version information and other metadata
 
 Each release also includes a copy of the *'MODFLOW 6 – Description of Input and Output'* document (`mf6io.pdf`) for the [latest MODFLOW 6 release candidate](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest).
 
-Release tags are based on the date (`YYYYMMDD`) MODFLOW 6 was compiled and the release was made. Previous nightly build releases are retained for 30 days in the event that there are issues with the latest release candidate. 
+Release tags are based on the date, with format `YYYYMMDD`. Nightly builds are retained for 30 days in the event that there are issues with the latest release candidate. 
 
 
 ## Reporting issues
