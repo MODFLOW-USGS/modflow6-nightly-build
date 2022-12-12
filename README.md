@@ -1,17 +1,20 @@
 # MODFLOW 6 nightly build
 
-Nightly development build for MODFLOW 6 binaries.
+Bleeding-edge development build of MODFLOW 6 binaries.
 
 [![Latest tag](https://img.shields.io/github/tag/MODFLOW-USGS/modflow6-nightly-build.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/tags/latest)
-[![MODFLOW 6 intel nightly build](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-build-intel.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-build-intel.yml)
-[![MODFLOW 6 distribution (nightly build with Intel)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-distribution.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-distribution.yml)
+[![MODFLOW 6 nightly build](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/dev.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/dev.yml)
+[![MODFLOW 6 distribution test](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/full.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/full.yml)
 
-The develop branch of the [MODFLOW 6 repository](https://github.com/MODFLOW-USGS/modflow6) contains bug fixes and new functionality that may be incorporated into the next [approved MODFLOW 6 release](https://www.usgs.gov/software/modflow-6-usgs-modular-hydrologic-model). Each night, Fortran source code from the development branch is compiled on `windows-2022`, `macos-12`, and `ubuntu-22.04` runner images using Intel Fortran. The binary executables released [here](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest) are release candidates for the next approved version of MODFLOW 6 but are considered preliminary or provisional.
+The `develop` branch of the [MODFLOW 6 repository](https://github.com/MODFLOW-USGS/modflow6) contains bug fixes and new functionality that may be incorporated into the next [approved MODFLOW 6 release](https://www.usgs.gov/software/modflow-6-usgs-modular-hydrologic-model). Each night, as well as whenever code is merged into the `develop` branch, a workflow runs here to compile MODFLOW 6 with Intel Fortran on `windows-2022`, `macos-12`, and `ubuntu-22.04` runner images. The binaries are then posted as a [release on this repository](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest). Binaries posted here are release candidates for the next approved version of MODFLOW 6 but are considered preliminary or provisional.
+
+**Note**: though this repository is named "nightly", a development distribution is created whenever code is merged into the `develop` branch of the MODFLOW 6 repository. If a release has already been created for the current date, assets are updated on the existing release.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 - [Distribution contents](#distribution-contents)
+- [Linux compatibility](#linux-compatibility)
 - [Reporting issues](#reporting-issues)
 - [Disclaimer](#disclaimer)
 
@@ -23,13 +26,18 @@ The nightly builds are available as operating-system specific [release assets](h
 
 1. **mf6[.exe]**: MODFLOW 6
 2. **mf5to6[.exe]**: the MODFLOW 5 to 6 converter
-3. **zbud6[.exe]**: the zone budget utility for MODFLOW 6)
+3. **zbud6[.exe]**: the zone budget utility for MODFLOW 6
 4. **libmf6[.dll/so/dylib]**: a dynamic-linked library or shared object version of MODFLOW 6
 5. **code.json**: a JSON file containing version information and other metadata
 
 Each release also includes a copy of the *'MODFLOW 6 – Description of Input and Output'* document (`mf6io.pdf`) for the [latest MODFLOW 6 release candidate](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest).
 
 Release tags are based on the date, with format `YYYYMMDD`. Nightly builds are retained for 30 days in the event that there are issues with the latest release candidate. 
+
+
+## Linux compatibility
+
+The Linux binaries are built on Ubuntu 22.04 and may encounter `libc`-related backwards-incompatibilities on earlier versions of Ubuntu or other Linux distributions. The [`MODFLOW-USGS/executables`](https://github.com/MODFLOW-USGS/executables/releases) distribution is built on Ubuntu 20.04 and is known to be compatible with 18.04-22.04.
 
 
 ## Reporting issues

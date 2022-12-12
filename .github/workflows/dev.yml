@@ -1,0 +1,133 @@
+name: MODFLOW 6 nightly build
+# Only allow one development build to run at once.
+# If a new build is triggered by merge to modflow6
+# develop, the previous build should be cancelled.
+concurrency: 
+  group: dev-dist
+  cancel-in-progress: true
+on:
+  schedule:
+    - cron: '0 2 * * *' # run at 2 AM UTC
+  push:
+    branches:
+      - master
+      - develop*
+      - ci-diagnose*
+  pull_request:
+    branches:
+      - master
+  # This lets modflow6 CI workflows trigger this workflow
+  # when PRs are merged into the modflow6 develop branch.
+  # This workflow should only be dispatched if the merge-
+  # triggered CI passes. This _should not_ be dispatched
+  # if the merge-triggered CI fails or by CI on open PRs.
+  repository_dispatch:
+    types: [build]
+jobs:
+  get_version:
+    name: Get current version
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash -l {0}
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          repository: MODFLOW-USGS/modflow6-nightly-build
+
+      - name: Checkout modflow6
+        uses: actions/checkout@v3
+        with:
+          repository: MODFLOW-USGS/modflow6
+          path: modflow6
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+      
+      - name: Get version
+        working-directory: modflow6/distribution
+        id: get_version
+        run: |
+          ver=$(python update_version.py -g)
+          echo "version=${ver}" >> "$GITHUB_OUTPUT"
+
+  make_dist:
+    name: Make development distribution
+    needs: get_version
+    uses: MODFLOW-USGS/modflow6/.github/workflows/release.yml@develop
+    with:
+      approve: false
+      branch: develop
+      development: false
+      run_tests: false
+      version: ${{ needs.get_version.outputs.version }}
+
+  release:
+    name: Create release
+    needs: make_dist
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    if: github.event_name == 'push' || github.event_name == 'schedule'
+    steps:
+
+      - name: Delete Older Releases
+        uses: dev-drprasad/delete-older-releases@v0.2.1
+        with:
+          keep_latest: 30
+          delete_tags: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: nightly
+
+      - name: List files in the artifact directory
+        run: ls -l nightly
+
+      - name: Get date
+        uses: josStorer/get-current-time@v2
+        id: current-time
+        with:
+          format: YYYYMMDD
+
+      - name: Show time
+        env:
+          TIME: "${{ steps.current-time.outputs.time }}"
+          F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
+        run: echo $TIME $F_TIME
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.current-time.outputs.formattedTime }}
+          name: ${{ steps.current-time.outputs.formattedTime }} development build
+          body: "MODFLOW 6 development build, compiled with Intel Fortran."
+          draft: false
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # remove all but zip and pdf files
+      - name: Prune release assets
+        run: find nightly -type f ! -name '*.zip' ! -name '*.pdf' ! -name 'code.json' -delete
+
+      - name: Upload release assets
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: nightly/**
+          tag: ${{ steps.current-time.outputs.formattedTime }}
+          overwrite: true
+          file_glob: true
