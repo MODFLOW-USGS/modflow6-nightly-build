@@ -20,7 +20,6 @@ shapely
 wheel
 
 # USGS dependencies
-git+https://github.com/Deltares/xmipy.git@develop
 git+https://github.com/modflowpy/flopy.git@develop
 git+https://github.com/modflowpy/pymake.git@master
 git+https://github.com/MODFLOW-USGS/modflowapi.git@develop
