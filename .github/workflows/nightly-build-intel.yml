@@ -141,6 +141,9 @@ jobs:
         working-directory: modflow6-examples/etc
         run: python ci_build_files.py
 
+      - name: Update version timestamps
+        run: python modflow6/distribution/update_version.py
+
       - name: Build docs
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -157,11 +160,17 @@ jobs:
           # build the docs
           python modflow6/distribution/build_docs.py -d -b modflow6/bin -o docs
 
-      - name: Upload docs
+      - name: Upload mf6io docs
         uses: actions/upload-artifact@v3
         with:
           name: mf6io
           path: docs/mf6io.pdf
+      
+      - name: Upload release notes
+        uses: actions/upload-artifact@v3
+        with:
+          name: ReleaseNotes
+          path: docs/ReleaseNotes.pdf
 
   dist:
     name: Build distributions
