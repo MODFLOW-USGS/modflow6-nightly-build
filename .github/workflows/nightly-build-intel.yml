@@ -222,6 +222,11 @@ jobs:
         working-directory: modflow6/autotest
         run: python update_flopy.py
 
+      - name: Install MODFLOW executables release
+        uses: modflowpy/install-modflow-action@v1
+        with:
+          subset: 'triangle,gridgen'
+
       - name: Checkout modflow6-examples
         uses: actions/checkout@v3
         with:
