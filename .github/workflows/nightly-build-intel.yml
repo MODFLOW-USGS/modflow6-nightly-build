@@ -112,6 +112,11 @@ jobs:
         working-directory: usgslatex/usgsLaTeX
         run: sudo ./install.sh --all-users
 
+      - name: Install triangle and gridgen
+        uses: modflowpy/install-modflow-action@v1
+        with:
+          subset: 'triangle,gridgen'
+
       - name: Download binaries
         uses: actions/download-artifact@v3
         with:
@@ -222,7 +227,7 @@ jobs:
         working-directory: modflow6/autotest
         run: python update_flopy.py
 
-      - name: Install MODFLOW executables release
+      - name: Install triangle and gridgen
         uses: modflowpy/install-modflow-action@v1
         with:
           subset: 'triangle,gridgen'
