@@ -67,10 +67,13 @@ jobs:
         working-directory: modflow6/autotest
         run: python update_flopy.py
 
-      - name: Install triangle and gridgen
+      - name: Install MODFLOW executables release
+        uses: modflowpy/install-modflow-action@v1
+
+      - name: Install MODFLOW nightly-build executables
         uses: modflowpy/install-modflow-action@v1
         with:
-          subset: 'triangle,gridgen'
+          repo: modflow6-nightly-build
 
       - name: Create distribution
         run: python make_distribution.py -mf6p ./modflow6 -mf6ep ./modflow6-examples -dp ./${{ runner.os }}

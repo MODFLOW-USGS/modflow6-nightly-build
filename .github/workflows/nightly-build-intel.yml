@@ -141,6 +141,10 @@ jobs:
         working-directory: modflow6-examples/etc
         run: pip install -r requirements.pip.txt
 
+      - name: Update flopy classes
+        working-directory: modflow6/autotest
+        run: python update_flopy.py
+
       - name: Build example models
         if: steps.cache-examples.outputs.cache-hit != 'true'
         working-directory: modflow6-examples/etc

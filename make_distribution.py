@@ -40,7 +40,6 @@ def paths_for_filename(filename, pth):
 
 
 def get_distribution_path(distribution_path=None):
-
     # set to default if not passed in
     if distribution_path is None:
         distribution_path = DISTRIBUTION_PATH
@@ -59,7 +58,6 @@ def get_distribution_path(distribution_path=None):
 
 
 def get_modflow6_path(modflow6_path=None):
-
     # set to default if not passed in
     if modflow6_path is None:
         modflow6_path = MODFLOW6_PATH
@@ -78,7 +76,6 @@ def get_modflow6_path(modflow6_path=None):
 
 
 def get_modflow6_examples_path(modflow6_examples_path=None):
-
     # set to default if not passed in
     if modflow6_examples_path is None:
         modflow6_examples_path = MODFLOW6_EXAMPLES_PATH
@@ -97,7 +94,6 @@ def get_modflow6_examples_path(modflow6_examples_path=None):
 
 
 def get_compiler(fortran_compiler=None):
-
     set_environmental_var = True
 
     # set fortran_compiler if -fc argument was set
@@ -126,7 +122,6 @@ def get_compiler(fortran_compiler=None):
 
 
 def get_keep(keep=None):
-
     # set to default if not passed in
     if keep is None:
         ckeep = KEEP
@@ -212,7 +207,6 @@ def get_is_approved(is_approved):
 
 
 def set_modflow6_release_info(modflow6_path):
-
     print(f"Setting the release information for {modflow6_path}")
 
     isApproved = None
@@ -244,7 +238,6 @@ def set_modflow6_release_info(modflow6_path):
 
 
 def meson_build_binaries(modflow6_dir, verbose=True):
-
     # Clean existing builddir
     build_path = os.path.join(modflow6_dir, "builddir")
     print(
@@ -299,7 +292,6 @@ def copy_binaries(modflow6_path, distribution_path):
 
 
 def initialize_new_distribution(modflow6_path, distribution_path):
-
     # Create a new folder and set up structure
     print(f"Creating new distribution path: {distribution_path}")
     if os.path.isdir(distribution_path):
@@ -345,7 +337,6 @@ def initialize_new_distribution(modflow6_path, distribution_path):
 
 
 def copy_visual_studio_files(modflow6_path, distribution_path):
-
     # Copy the Visual Studio solution and project files
     flist = [
         os.path.join(modflow6_path, "msvs", "mf6.sln"),
@@ -391,7 +382,6 @@ def build_utility(
     utility_name,
     target_name=None,
 ):
-
     # allow utility target name (zbud6) to be different from utility_name (zonebudget)
     if target_name is None:
         target_name = utility_name
@@ -454,7 +444,6 @@ def download_published_reports(distribution_path):
 
 
 def clean_latex_files(modflow6_path):
-
     print("Cleaning latex files")
     check = False
     exts = ["pdf", "aux", "bbl", "idx", "lof", "out", "toc"]
@@ -500,13 +489,11 @@ def clean_latex_files(modflow6_path):
 
 
 def rebuild_tex_from_dfn(modflow6_path):
-
     print("Rebuilding the tex files from dfn by running mf6ivar.py")
     npth = os.path.join(modflow6_path, "doc", "mf6io", "mf6ivar")
     pth = "./"
 
     with cwd(npth):
-
         # get list of TeX files
         files = [
             f
@@ -554,7 +541,6 @@ def rebuild_tex_from_dfn(modflow6_path):
 
 
 def create_simple_testmodel(temp_path, bin_path):
-
     # build simple model
     print(f"Creating a simple test model in {temp_path}.")
     name = "mymodel"
@@ -586,7 +572,6 @@ def update_mf6io_tex_files(
     mf6bin_path,
     expth,
 ):
-
     texpth = os.path.join(modflow6_path, "doc", "mf6io")
     fname1 = os.path.join(texpth, "mf6output.tex")
     fname2 = os.path.join(texpth, "mf6noname.tex")
@@ -653,7 +638,6 @@ def update_latex_releaseinfo(
     modflow6_path,
     distribution_path,
 ):
-
     pth = os.path.join(modflow6_path, "doc", "ReleaseNotes")
     files = ["folder_struct.tex"]
     delete_files(files, pth, allow_failure=True)
@@ -695,7 +679,6 @@ def build_latex_docs(
         print("Building latex document: {}".format(t))
         dirname = os.path.join(p, d)
         with cwd(dirname):
-
             pdflatexcmd = [
                 "pdflatex",
                 "-interaction=nonstopmode",
@@ -763,7 +746,6 @@ def build_latex(
     distribution_path,
 ):
     if latex_is_available():
-
         # set paths
         temp_path = "./temp"
         ext = ""
@@ -796,7 +778,6 @@ def build_latex(
 
 
 def build_examples(modflow6_examples_path, distribution_path):
-
     print("Building examples")
 
     examples_destination = os.path.join(distribution_path, "examples")
@@ -845,7 +826,6 @@ def get_list_simulation_folders(pth):
 
 
 def build_example_run_scripts_win(distribution_path):
-
     if "windows" != get_platform():
         return
 
@@ -890,7 +870,6 @@ def build_example_run_scripts_win(distribution_path):
 
 
 def build_example_run_scripts_linux(distribution_path):
-
     if get_platform() == "windows":
         return
 
@@ -950,16 +929,6 @@ def build_and_run_examples(
         print(
             "Building and running examples so that mf6examples.pdf can be built with LaTex."
         )
-
-        bin_pth = os.path.join(modflow6_examples_path, "bin")
-        print(f"Using pymake to download binary executables into {bin_pth}.")
-        if not os.path.isdir(bin_pth):
-            os.makedirs(bin_pth)
-        pymake.getmfexes(pth=bin_pth, verbose=True, verify=False)
-
-        # copy the distribution binaries into modflow6examples/bin
-        print("Copying binaries from distribution into modflow6examples/bin.")
-        copy_binaries(distribution_path, modflow6_examples_path)
 
         print("Running modflow6examples.")
         # run modflow6examples/etc/ci_build_files.py -r to build and run examples
@@ -1031,7 +1000,6 @@ def zipdir(dirname, zipname):
 
 
 if __name__ == "__main__":
-
     # command line usages
     # python make_distribution.py [options]
     #   options include:
