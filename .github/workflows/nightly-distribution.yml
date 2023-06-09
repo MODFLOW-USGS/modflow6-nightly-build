@@ -72,6 +72,11 @@ jobs:
         with:
           subset: 'triangle,gridgen'
 
+      - name: Install MODFLOW nightly-build executables
+        uses: modflowpy/install-modflow-action@v1
+        with:
+          repo: modflow6-nightly-build
+
       - name: Create distribution
         run: python make_distribution.py -mf6p ./modflow6 -mf6ep ./modflow6-examples -dp ./${{ runner.os }}
 
