@@ -270,6 +270,27 @@ def meson_build_binaries(modflow6_dir, verbose=True):
     return
 
 
+def copy_binaries(modflow6_path, distribution_path):
+    exe_ext = ""
+    dll_ext = ".dylib"
+    if "linux" in get_platform():
+        exe_ext = ""
+        dll_ext = ".so"
+    elif "macos" in get_platform():
+        exe_ext = ""
+        dll_ext = ".dylib"
+    elif "windows" in get_platform():
+        exe_ext = ".exe"
+        dll_ext = ".dll"
+    binary_exe_list = [f"{exe}{exe_ext}" for exe in ["mf6", "mf5to6", "zbud6"]]
+    binary_dll_list = [f"{dll}{dll_ext}" for dll in ["libmf6"]]
+    for fname in binary_exe_list + binary_dll_list:
+        src = os.path.join(modflow6_path, "bin", fname)
+        dst = os.path.join(distribution_path, "bin", fname)
+        shutil.copy(src, dst)
+    return
+
+
 def initialize_new_distribution(modflow6_path, distribution_path):
     # Create a new folder and set up structure
     print(f"Creating new distribution path: {distribution_path}")
