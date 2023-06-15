@@ -1,7 +1,10 @@
 name: MODFLOW 6 nightly build
 # Only allow one development build to run at once.
-# If a new build is triggered by merge to modflow6
-# develop, the previous build should be cancelled.
+# If a new build is triggered, the previous build
+# is cancelled. This allows modflow6 CI to trigger
+# the development build when merging into develop,
+# guaranteeing that the development distribution
+# always consists of the latest state of develop.
 concurrency: 
   group: dev-dist
   cancel-in-progress: true
@@ -11,7 +14,7 @@ on:
   push:
     branches:
       - master
-      - develop*
+      - develop
       - ci-diagnose*
   pull_request:
     branches:
@@ -42,7 +45,7 @@ jobs:
       - name: Checkout modflow6
         uses: actions/checkout@v3
         with:
-          repository: MODFLOW-USGS/modflow6
+          repository: ${{ github.repository_owner }}/modflow6
           path: modflow6
 
       - name: Setup Python
@@ -67,9 +70,9 @@ jobs:
     with:
       approve: false
       branch: develop
-      development: false
+      development: true
       run_tests: false
-      version: ${{ needs.get_version.outputs.version }}
+      version: "${{ needs.get_version.outputs.version }}dev"
 
   release:
     name: Create release
@@ -78,6 +81,7 @@ jobs:
     defaults:
       run:
         shell: bash
+    # don't create a release post if triggering event is pull request
     if: github.event_name == 'push' || github.event_name == 'schedule'
     steps:
 
