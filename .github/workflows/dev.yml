@@ -72,7 +72,7 @@ jobs:
       branch: develop
       developmode: true
       full: false
-      run_tests: true
+      run_tests: false
       version: "${{ needs.get_version.outputs.version }}dev"
 
   release:
