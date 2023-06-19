@@ -70,8 +70,9 @@ jobs:
     with:
       approve: false
       branch: develop
-      development: true
-      run_tests: false
+      developmode: true
+      full: false
+      run_tests: true
       version: "${{ needs.get_version.outputs.version }}dev"
 
   release:

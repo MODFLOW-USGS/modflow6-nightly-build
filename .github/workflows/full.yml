@@ -54,6 +54,7 @@ jobs:
     with:
       approve: false
       branch: develop
-      development: false
+      developmode: false
+      full: true
       run_tests: true
-      version: ${{ needs.get_version.outputs.version }}
+      version: "${{ needs.get_version.outputs.version }}dev"
