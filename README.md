@@ -3,8 +3,8 @@
 Bleeding-edge development build of MODFLOW 6 binaries.
 
 [![Latest tag](https://img.shields.io/github/tag/MODFLOW-USGS/modflow6-nightly-build.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/tags/latest)
-[![MODFLOW 6 nightly build](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/dev.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/dev.yml)
-[![MODFLOW 6 distribution test](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/full.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/full.yml)
+[![MODFLOW 6 intel nightly build](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-build-intel.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-build-intel.yml)
+[![MODFLOW 6 full distribution test](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/full-dist-test.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/full-dist-test.yml)
 
 The `develop` branch of the [MODFLOW 6 repository](https://github.com/MODFLOW-USGS/modflow6) contains bug fixes and new functionality that may be incorporated into the next [approved MODFLOW 6 release](https://www.usgs.gov/software/modflow-6-usgs-modular-hydrologic-model). Each night, as well as whenever code is merged into the `develop` branch, a workflow runs here to compile MODFLOW 6 with Intel Fortran on `windows-2022`, `macos-12`, and `ubuntu-22.04` runner images. The binaries are then posted as a [release on this repository](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest). Binaries posted here are release candidates for the next approved version of MODFLOW 6 but are considered preliminary or provisional.
 

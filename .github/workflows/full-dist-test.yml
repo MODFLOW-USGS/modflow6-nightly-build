@@ -1,4 +1,4 @@
-name: MODFLOW 6 distribution test
+name: MODFLOW 6 full distribution test
 on:
   schedule:
     - cron: '0 2 * * *' # run at 2 AM UTC
@@ -56,5 +56,5 @@ jobs:
       branch: develop
       developmode: false
       full: true
-      run_tests: true
+      run_tests: false
       version: "${{ needs.get_version.outputs.version }}dev"

@@ -1,4 +1,4 @@
-name: MODFLOW 6 nightly build
+name: MODFLOW 6 intel nightly build
 # Only allow one development build to run at once.
 # If a new build is triggered, the previous build
 # is cancelled. This allows modflow6 CI to trigger
