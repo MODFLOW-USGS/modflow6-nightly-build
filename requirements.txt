@@ -1,27 +1,5 @@
-# PyPI dependencies
-appdirs
-filelock
-flaky
-ipython
-jupyter
-jupytext
-matplotlib
+https://github.com/modflowpy/flopy/archive/develop.zip
+flopy[test, optional]
 meson!=0.63.0
-modflow-devtools
+mfpymake
 ninja
-numpy
-pandas
-pyshp
-pytest
-pytest-xdist
-rasterio
-rasterstats
-requests
-scipy
-shapely
-wheel
-
-# USGS dependencies
-git+https://github.com/modflowpy/flopy.git@develop
-git+https://github.com/modflowpy/pymake.git@master
-git+https://github.com/MODFLOW-USGS/modflowapi.git@develop
