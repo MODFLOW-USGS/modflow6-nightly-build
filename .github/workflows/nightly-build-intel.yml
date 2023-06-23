@@ -101,13 +101,21 @@ jobs:
         with:
           path: nightly
 
+      - name: List artifacts
+        working-directory: nightly
+        run: |
+          echo "artifacts include:"
+          ls -lR .
+
       - name: Prune artifacts
         working-directory: nightly
         run: |
-          echo "removing bin directories"
-          rm -rf bin-*
           echo "adding .zip suffix to distributions"
-          for f in mf*; do mv -- "$f" "$f.zip"; done
+          for f in mf*/mf*; do mv -- "$f" "$(basename $f)"; done
+          echo "pruning artifacts"
+          find mf* -type d -delete
+          rm -rf bin-*
+          rm -rf release_notes
           echo "release assets include:"
           ls -lR .
 
@@ -132,4 +140,4 @@ jobs:
           draft: false
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: "nightly/*.zip,nightly/doc/*.pdf,nightly/code.json"
+          artifacts: "nightly/*.zip,nightly/doc/*.pdf"
