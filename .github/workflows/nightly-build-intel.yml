@@ -61,7 +61,7 @@ jobs:
         id: get_version
         run: |
           ver=$(python update_version.py -g)
-          echo "version=${ver}" >> "$GITHUB_OUTPUT"
+          echo "version=${ver}dev" >> "$GITHUB_OUTPUT"
 
   make_dist:
     name: Make development distribution
@@ -73,11 +73,13 @@ jobs:
       developmode: true
       full: false
       run_tests: false
-      version: "${{ needs.get_version.outputs.version }}dev"
+      version: ${{ needs.get_version.outputs.version }}
 
   release:
     name: Create release
-    needs: make_dist
+    needs:
+      - get_version
+      - make_dist
     runs-on: ubuntu-22.04
     defaults:
       run:
@@ -123,6 +125,12 @@ jobs:
           draft: false
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Rename distributions
+        run: |
+          mv nightly/${{ needs.get_version.outputs.version }}_win64.zip nightly/win64.zip
+          mv nightly/${{ needs.get_version.outputs.version }}_linux.zip nightly/linux.zip
+          mv nightly/${{ needs.get_version.outputs.version }}_mac.zip nightly/mac.zip
 
       # remove all but zip and pdf files
       - name: Prune release assets
