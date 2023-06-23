@@ -101,8 +101,23 @@ jobs:
         with:
           path: nightly
 
-      - name: List files in the artifact directory
-        run: ls -l nightly
+      - name: List artifacts
+        working-directory: nightly
+        run: |
+          echo "artifacts include:"
+          ls -lR .
+
+      - name: Prune artifacts
+        working-directory: nightly
+        run: |
+          echo "adding .zip suffix to distributions"
+          for f in mf*/mf*; do mv -- "$f" "$(basename $f)"; done
+          echo "pruning artifacts"
+          find mf* -type d -delete
+          rm -rf bin-*
+          rm -rf release_notes
+          echo "release assets include:"
+          ls -lR .
 
       - name: Get date
         uses: josStorer/get-current-time@v2
@@ -125,22 +140,4 @@ jobs:
           draft: false
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Rename distributions
-        run: |
-          mv nightly/${{ needs.get_version.outputs.version }}_win64.zip nightly/win64.zip
-          mv nightly/${{ needs.get_version.outputs.version }}_linux.zip nightly/linux.zip
-          mv nightly/${{ needs.get_version.outputs.version }}_mac.zip nightly/mac.zip
-
-      # remove all but zip and pdf files
-      - name: Prune release assets
-        run: find nightly -type f ! -name '*.zip' ! -name '*.pdf' ! -name 'code.json' -delete
-
-      - name: Upload release assets
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: nightly/**
-          tag: ${{ steps.current-time.outputs.formattedTime }}
-          overwrite: true
-          file_glob: true
+          artifacts: "nightly/*.zip,nightly/doc/*.pdf"
