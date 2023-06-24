@@ -43,7 +43,7 @@ The nightly builds are available as operating-system specific [distributions](ht
 
 ### Binaries
 
-The binaries are built in develop mode. The Windows distribution also contains `.pdb` files.
+The binaries are built in develop mode.
 
 Linux binaries built on Ubuntu 22.04 may encounter `libc`-related backwards-incompatibilities on earlier versions of Ubuntu or other Linux distributions. This distribution, the main MODFLOW 6 distribution, and the [`MODFLOW-USGS/executables`](https://github.com/MODFLOW-USGS/executables/releases) distribution are built on Ubuntu 20.04 for broader compatibility.
 
