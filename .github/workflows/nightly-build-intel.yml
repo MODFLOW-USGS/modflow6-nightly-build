@@ -16,9 +16,13 @@ on:
       - master
       - develop
       - ci-diagnose*
+    paths-ignore:
+      - '**.md'
   pull_request:
     branches:
       - master
+    paths-ignore:
+      - '**.md'
   # This lets modflow6 CI workflows trigger this workflow
   # when PRs are merged into the modflow6 develop branch.
   # This workflow should only be dispatched if the merge-
