@@ -114,9 +114,9 @@ jobs:
       - name: Prune artifacts
         working-directory: nightly
         run: |
-          echo "adding .zip suffix to distributions"
-          for f in mf*/mf*; do mv -- "$f" "$(basename $f)"; done
           echo "pruning artifacts"
+          for f in mf*/mf*; do mv -- "$f" "$(basename $f)"; done
+          for f in *.zip; do mv -- "$f" "${f##mf*dev_}"; done
           find mf* -type d -delete
           rm -rf bin-*
           rm -rf release_notes
