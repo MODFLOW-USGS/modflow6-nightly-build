@@ -23,7 +23,7 @@ The `develop` branch of the [MODFLOW 6 repository](https://github.com/MODFLOW-US
 
 ## Distribution contents
 
-The nightly builds are available as operating-system specific [distributions](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest) (`mf6.y.zdev_win64.zip`, `..._mac.zip`, `..._linux.zip`). Each includes two directories, `bin` and `doc`, and a `code.json` metadata file. 
+The nightly builds are available as operating-system specific [distributions](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest). Each includes an internal directory `mf6.y.zdev_<ostag>` with two subdirectories, `bin` and `doc`, and a `code.json` metadata file. 
 
 **mf6.y.zdev_...**
 
@@ -49,7 +49,7 @@ Linux binaries built on Ubuntu 22.04 may encounter `libc`-related backwards-inco
 
 ### Documentation
 
-Each release also includes a copy of the *'MODFLOW 6 – Description of Input and Output'* document (`mf6io.pdf`) for the [latest MODFLOW 6 release candidate](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest).
+Release notes summarizing the current development cycle's changeset are included in the nightly distribution. The distribution also includes a copy of the *'MODFLOW 6 – Description of Input and Output'* document (`mf6io.pdf`).
 
 ### Tags
 
