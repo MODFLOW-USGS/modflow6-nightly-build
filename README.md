@@ -49,7 +49,7 @@ Linux binaries built on Ubuntu 22.04 may encounter `libc`-related backwards-inco
 
 ### Documentation
 
-Each release also includes a copy of the *'MODFLOW 6 – Description of Input and Output'* document (`mf6io.pdf`) for the [latest MODFLOW 6 release candidate](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest).
+Release notes summarizing the current development cycle's changeset are included in the nightly distribution. The distribution also includes a copy of the *'MODFLOW 6 – Description of Input and Output'* document (`mf6io.pdf`).
 
 ### Tags
 
