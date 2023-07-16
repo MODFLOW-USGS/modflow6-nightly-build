@@ -61,4 +61,4 @@ jobs:
       developmode: false
       full: true
       run_tests: false
-      version: "${{ needs.get_version.outputs.version }}dev"
+      version: "${{ needs.get_version.outputs.version }}"
