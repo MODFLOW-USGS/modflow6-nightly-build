@@ -65,7 +65,7 @@ jobs:
         id: get_version
         run: |
           ver=$(python update_version.py -g)
-          echo "version=${ver}dev" >> "$GITHUB_OUTPUT"
+          echo "version=${ver}" >> "$GITHUB_OUTPUT"
 
   make_dist:
     name: Make development distribution
