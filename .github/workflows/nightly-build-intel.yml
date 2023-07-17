@@ -116,7 +116,7 @@ jobs:
         run: |
           echo "pruning artifacts"
           for f in mf*/mf*; do mv -- "$f" "$(basename $f)"; done
-          for f in *.zip; do mv -- "$f" "${f##mf*dev_}"; done
+          for f in *.zip; do mv -- "$f" "${f##mf*dev*_}"; done
           find mf* -type d -delete
           rm -rf bin-*
           rm -rf release_notes
