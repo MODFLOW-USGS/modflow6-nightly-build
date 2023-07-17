@@ -23,23 +23,7 @@ The `develop` branch of the [MODFLOW 6 repository](https://github.com/MODFLOW-US
 
 ## Distribution contents
 
-The nightly builds are available as operating-system specific [distributions](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest). Each includes an internal directory `mf6.y.zdev_<ostag>` with two subdirectories, `bin` and `doc`, and a `code.json` metadata file. 
-
-**mf6.y.zdev_...**
-
-- **code.json**: a JSON file with version information and other metadata
-
-- **bin/**
-
-    1. **mf6[.exe]**: MODFLOW 6
-    2. **mf5to6[.exe]**: the MODFLOW 5 to 6 converter
-    3. **zbud6[.exe]**: the zone budget utility for MODFLOW 6
-    4. **libmf6[.dll/so/dylib]**: a dynamic-linked library or shared object version of MODFLOW 6
-
-- **doc/**
-
-    1. **release.pdf**: release notes
-    2. **mf6io.pdf**: input/output documentation
+The nightly builds are available as operating-system specific [distributions](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest) including binaries, MODFLOW 6 input/output documentation, development notes, and a `code.json` metadata file. 
 
 ### Binaries
 
