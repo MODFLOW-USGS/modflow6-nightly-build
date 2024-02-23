@@ -6,16 +6,15 @@ Nightly development build of MODFLOW 6.
 [![MODFLOW 6 intel nightly build](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-build-intel.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-build-intel.yml)
 [![MODFLOW 6 full distribution test](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/full-dist-test.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/full-dist-test.yml)
 
-The `develop` branch of the [MODFLOW 6 repository](https://github.com/MODFLOW-USGS/modflow6) contains bug fixes and new functionality that may be incorporated into the next [approved MODFLOW 6 release](https://www.usgs.gov/software/modflow-6-usgs-modular-hydrologic-model). Each night, MODFLOW 6 is compiled with Intel Fortran on `windows-2022`, `macos-12`, and `ubuntu-20.04` runner images. A minimal development distribution is posted as a [release on this repository](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest). Binaries should be considered preliminary or provisional release candidates for the next version of MODFLOW 6.
+The `develop` branch of the [MODFLOW 6 repository](https://github.com/MODFLOW-USGS/modflow6) contains bug fixes and new functionality that may be incorporated into the next [approved MODFLOW 6 release](https://www.usgs.gov/software/modflow-6-usgs-modular-hydrologic-model). Minimal development distributions are posted regularly to [nightly build repository](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest) &mdash; these should be considered preliminary, provisional release candidates for the next version of MODFLOW 6.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
 - [Distribution contents](#distribution-contents)
   - [Binaries](#binaries)
   - [Documentation](#documentation)
-  - [Tags](#tags)
+- [Tags](#tags)
 - [Reporting issues](#reporting-issues)
 - [Disclaimer](#disclaimer)
 
@@ -35,7 +34,7 @@ Linux binaries built on Ubuntu 22.04 may encounter `libc`-related backwards-inco
 
 Release notes summarizing the current development cycle's changeset are included in the nightly distribution. The distribution also includes a copy of the *'MODFLOW 6 – Description of Input and Output'* document (`mf6io.pdf`).
 
-### Tags
+## Tags
 
 Release tags are based on the date, with format `YYYYMMDD`. Nightly builds are retained for 30 days in the event that there are issues with the latest release candidate. 
 

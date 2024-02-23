@@ -140,7 +140,7 @@ jobs:
         with:
           tag: ${{ steps.current-time.outputs.formattedTime }}
           name: ${{ steps.current-time.outputs.formattedTime }} development build
-          body: "MODFLOW 6 development build, compiled with Intel Fortran."
+          body: "MODFLOW 6 development build, compiled with Intel Fortran. A statically linked distribution for ARM macs, built with GNU Fortran, is also included."
           draft: false
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
