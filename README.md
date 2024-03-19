@@ -3,7 +3,7 @@
 Nightly development build of MODFLOW 6.
 
 [![Latest tag](https://img.shields.io/github/tag/MODFLOW-USGS/modflow6-nightly-build.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/tags/latest)
-[![MODFLOW 6 intel nightly build](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-build-intel.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-build-intel.yml)
+[![MODFLOW 6 nightly build](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-build.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/nightly-build.yml)
 [![MODFLOW 6 full distribution test](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/full-dist-test.yml/badge.svg)](https://github.com/MODFLOW-USGS/modflow6-nightly-build/actions/workflows/full-dist-test.yml)
 
 The `develop` branch of the [MODFLOW 6 repository](https://github.com/MODFLOW-USGS/modflow6) contains bug fixes and new functionality that may be incorporated into the next [approved MODFLOW 6 release](https://www.usgs.gov/software/modflow-6-usgs-modular-hydrologic-model). Minimal development distributions are posted regularly to [nightly build repository](https://github.com/MODFLOW-USGS/modflow6-nightly-build/releases/latest) &mdash; these should be considered preliminary, provisional release candidates for the next version of MODFLOW 6.
