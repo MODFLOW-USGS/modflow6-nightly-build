@@ -1,4 +1,4 @@
-name: MODFLOW 6 intel nightly build
+name: MODFLOW 6 nightly build
 # Only allow one development build to run at once.
 # If a new build is triggered, the previous build
 # is cancelled. This allows modflow6 CI to trigger
@@ -140,7 +140,7 @@ jobs:
         with:
           tag: ${{ steps.current-time.outputs.formattedTime }}
           name: ${{ steps.current-time.outputs.formattedTime }} development build
-          body: "MODFLOW 6 development build, compiled with Intel Fortran. A statically linked distribution for ARM macs, built with GNU Fortran, is also included."
+          body: "MODFLOW 6 development build."
           draft: false
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
